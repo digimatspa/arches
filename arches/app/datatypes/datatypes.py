@@ -1035,12 +1035,12 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
 
 class FileListDataType(BaseDataType):
 
-    def get_tile_data(self, user_is_reviewer, user_id, tile):
-        if user_is_reviewer is False and tile.provisionaledits is not None and user_id in tile.provisionaledits:
-            data = tile.provisionaledits[user_id]['value']
-        else:
-            data = tile.data
-        return data
+    # def get_tile_data(self, user_is_reviewer, user_id, tile):
+    #     if user_is_reviewer is False and tile.provisionaledits is not None and user_id in tile.provisionaledits:
+    #         data = tile.provisionaledits[user_id]['value']
+    #     else:
+    #         data = tile.data
+    #     return data
 
     def handle_request(self, current_tile, request, node):
         previously_saved_tile = models.TileModel.objects.filter(pk=current_tile.tileid)
@@ -1048,9 +1048,9 @@ class FileListDataType(BaseDataType):
         if hasattr(request.user, 'userprofile') is not True:
             models.UserProfile.objects.create(user=request.user)
         user_is_reviewer = request.user.userprofile.is_reviewer()
-        current_tile_data = self.get_tile_data(user_is_reviewer, str(user.id), current_tile)
+        current_tile_data = self.get_tile_data( current_tile)
         if previously_saved_tile.count() == 1:
-            previously_saved_tile_data = self.get_tile_data(user_is_reviewer, str(user.id), previously_saved_tile[0])
+            previously_saved_tile_data = self.get_tile_data( previously_saved_tile[0])
             if previously_saved_tile_data[str(node.pk)] is not None:
                 for previously_saved_file in previously_saved_tile_data[str(node.pk)]:
                     previously_saved_file_has_been_removed = True
@@ -1355,7 +1355,8 @@ class DomainDataType(BaseDomainDataType):
             document['strings'].append({'string': domain_text, 'nodegroup_id': tile.nodegroup_id, 'provisional': provisional})
 
     def get_display_value(self, tile, node):
-        return self.get_option_text(node, tile.data[str(node.nodeid)])
+        data = self.get_tile_data(tile)
+        return self.get_option_text(node, data[str(node.nodeid)])
 
     def transform_export_values(self, value, *args, **kwargs):
         ret = ''
@@ -1442,8 +1443,9 @@ class DomainListDataType(BaseDomainDataType):
 
     def get_display_value(self, tile, node):
         new_values = []
-        if tile.data[str(node.nodeid)] is not None:
-            for val in tile.data[str(node.nodeid)]:
+        data = self.get_tile_data(tile)
+        if data[str(node.nodeid)] is not None:
+            for val in data[str(node.nodeid)]:
                 option = self.get_option_text(node, val)
                 new_values.append(option)
         return ','.join(new_values)
@@ -1535,7 +1537,8 @@ class ResourceInstanceDataType(BaseDataType):
         return errors
 
     def get_display_value(self, tile, node):
-        nodevalue = tile.data[str(node.nodeid)]
+        data = self.get_tile_data(tile)
+        nodevalue = data[str(node.nodeid)]
         resource_names = self.get_resource_names(nodevalue)
         return ', '.join(resource_names)
 
@@ -1616,7 +1619,8 @@ class NodeValueDataType(BaseDataType):
     def get_display_value(self, tile, node):
         datatype_factory = DataTypeFactory()
         value_node = models.Node.objects.get(nodeid=node.config['nodeid'])
-        tileid = tile.data[str(node.pk)]
+        data = self.get_tile_data(tile)
+        tileid = data[str(node.pk)]
         if tileid:
             value_tile = models.TileModel.objects.get(tileid=tileid)
             datatype = datatype_factory.get_instance(value_node.datatype)
