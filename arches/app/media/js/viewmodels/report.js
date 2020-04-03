@@ -49,6 +49,9 @@ define(['knockout', 'underscore', 'moment', 'bindings/let'], function(ko, _, mom
         var getCardTiles = function(card, tiles) {
             var cardTiles = ko.unwrap(card.tiles);
             cardTiles.forEach(function(tile) {
+                if (!ko.isObservable(tile.provisionaledits)) {
+                    tile.provisionaledits = ko.observable(tile.provisionaledits);
+                }
                 tiles.push(tile);
                 tile.cards.forEach(function(card) {
                     getCardTiles(card, tiles);
