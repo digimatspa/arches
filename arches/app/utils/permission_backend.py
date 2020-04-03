@@ -107,6 +107,17 @@ def get_nodegroups_by_perm(user, perms, any_perm=True):
     return list(C - A | B)
 
 
+def get_readable_resource_types(user):
+    """
+    returns a list of graphs that a user can read resource instances of
+
+    Arguments:
+    user -- the user to check
+
+    """
+
+    return get_resource_types_by_perm(user, ['models.read_nodegroup'])
+
 def get_editable_resource_types(user):
     """
     returns a list of graphs that a user can edit resource instances of

@@ -23,7 +23,7 @@ from arches.app.models.resource import Resource
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
 from django.views.generic import TemplateView
 from arches.app.datatypes.datatypes import DataTypeFactory
-from arches.app.utils.permission_backend import get_createable_resource_types
+from arches.app.utils.permission_backend import get_createable_resource_types, get_readable_resource_types
 
 
 class BaseManagerView(TemplateView):
@@ -51,6 +51,20 @@ class BaseManagerView(TemplateView):
                      'deploymentdate',
                      'deploymentfile',
                      'author'])
+
+        context['readable_resources'] = JSONSerializer().serialize(
+            get_readable_resource_types(self.request.user),
+            exclude=['functions',
+                     'ontology',
+                     'subtitle',
+                     'color',
+                     'isactive',
+                     'isresource',
+                     'version',
+                     'deploymentdate',
+                     'deploymentfile',
+                     'author'])
+        
         context['nav'] = {
             'icon': 'fa fa-chevron-circle-right',
             'title': '',
