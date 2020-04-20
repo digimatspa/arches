@@ -127,11 +127,59 @@ define(['arches',
             };
             _.each(this.get('related_resources'), function(rr){
                 var res = {'graph_name': rr.name, 'related':[]};
-                _.each(rr.resources, function(resource) {
+                //MOD START
+                /*_.each(rr.resources, function(resource) {
                     _.each(resource.relationships, function(relationship){
                         res.related.push({'displayname':resource.displayname,'link': arches.urls.resource_report + resource.instance_id, 'relationship': relationship});
                     });
+                });*/
+
+
+
+                _.each(rr.resources, function(resource) {
+                    
+                    $.ajax({
+                        type: 'GET',
+                        url: colosseo.urls.node_values,
+                        async: false,
+                        data: {
+                            resourceid: resource.instance_id,
+                            node_name: 'Immagine di anteprima'
+                        },
+                        success: function(response){
+
+                            if (response.length > 0){
+                                resource.thumbnail_url = response[0].url;
+                            }
+
+                            _.each(resource.relationships, function (relationship) {
+                                res.related.push({
+                                    'displayname': resource.displayname,
+                                    'link': arches.urls.resource_report + resource.instance_id,
+                                    'relationship': relationship,
+                                    'resourceid': resource.instance_id,
+                                    'thumbnail_url': resource.thumbnail_url
+                                });
+                            });
+                        },
+                        error: function(response){
+                            console.log(response);
+
+
+                            _.each(resource.relationships, function (relationship) {
+                                res.related.push({
+                                    'displayname': resource.displayname,
+                                    'link': arches.urls.resource_report + resource.instance_id,
+                                    'relationship': relationship,
+                                    'resourceid': resource.instance_id,
+                                    'thumbnail_url': null
+                                });
+                            });
+                        }
+                    });
                 });
+                //MOD END
+
                 this.sort_related(res.related, 'displayname');
                 this.related_resources.push(res);
             }, this);

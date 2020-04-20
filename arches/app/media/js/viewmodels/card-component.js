@@ -24,7 +24,9 @@ define([
         this.card = params.card;
         this.card.showIds = this.showIds;
         this.tile = params.tile;
-        this.reportExpanded = ko.observable(true);
+        //MOD START
+        this.reportExpanded = ko.observable(false);
+        //MOD END
         if (this.preview) {
             if (!this.card.newTile) {
                 this.card.newTile = this.card.getNewTile();

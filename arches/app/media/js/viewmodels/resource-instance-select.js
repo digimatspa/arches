@@ -9,6 +9,18 @@ define([
     var ResourceInstanceSelectViewModel = function(params) {
         var self = this;
         params.configKeys = ['placeholder'];
+
+        //MOD START
+        if((params.value && params.value() == null) || !params.value) {
+           let qrparams = (new URL(document.location)).searchParams;
+           let qrvalue = qrparams.get(params.node.nodeid);
+           if(qrvalue) {
+               params.value = ko.observable(qrvalue.replace("#",""));
+               params.tile.data[params.node.nodeid] = params.value;
+           }
+        }
+        //MOD END
+
         this.multiple = params.multiple || false;
         this.value = params.value || undefined;
         this.disable = params.disable || function() {
