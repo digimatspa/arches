@@ -16,7 +16,9 @@ from guardian.shortcuts import (
 from guardian.exceptions import WrongAppError
 from django.contrib.auth.models import User, Group, Permission
 from arches.app.models.models import ResourceInstance
+import logging
 
+logger = logging.getLogger(__name__)
 
 class PermissionBackend(ObjectPermissionBackend):
     def has_perm(self, user_obj, perm, obj=None):
@@ -201,10 +203,13 @@ def get_resource_types_by_perm(user, perms):
     """
 
     graphs = set()
+    perm_manager = RoleGraphPermissions()
     nodegroups = get_nodegroups_by_perm(user, perms)
     for node in Node.objects.filter(nodegroup__in=nodegroups).select_related("graph"):
         if node.graph.isresource and str(node.graph_id) != settings.SYSTEM_SETTINGS_RESOURCE_MODEL_ID:
-            graphs.add(node.graph)
+            has_perm = perm_manager.has_role_permissions(user, node.graph.graphid, perms)
+            if has_perm is None or has_perm:
+                graphs.add(node.graph)
     return list(graphs)
 
 
@@ -264,11 +269,28 @@ def check_resource_instance_permissions(user, resourceid, permission):
     try:
         resource = ResourceInstance.objects.get(resourceinstanceid=resourceid)
         result["resource"] = resource
-        all_perms = get_perms(user, resource)
+
+        all_perms = []
+        #get role permissions first
+        if not user.is_superuser:
+            all_perms = get_role_permissions_for_resource(user, resource)
+
+        if len(all_perms) == 0:
+            #get user resource native permissions
+            all_perms = get_perms(user, resource)
+
         if len(all_perms) == 0:  # no permissions assigned. permission implied
             result["permitted"] = "unknown"
             return result
         else:
+            # check role permissions
+            if "no_access_to_resourceinstance" in all_perms:  # user is restricted
+                result["permitted"] = False
+                return result
+            elif permission in all_perms:  # user is permitted
+                result["permitted"] = True
+                return result
+
             user_permissions = get_user_perms(user, resource)
             if "no_access_to_resourceinstance" in user_permissions:  # user is restricted
                 result["permitted"] = False
@@ -382,3 +404,139 @@ def user_is_resource_reviewer(user):
     """
 
     return user.groups.filter(name='Resource Reviewer').exists()
+
+
+def get_role_permissions_for_resource(user, resource):
+    from arches.app.models.models import AuthRole
+    from arches.app.models.resource import Resource
+
+    results = set()
+    try:
+        # two types of resource objects are handled Resource and ResourceInstance
+        if getattr(resource, 'get_node_values', None) is None:
+            resource = Resource.objects.get(pk=resource.resourceinstanceid)
+
+        heritageId, areaId = resource.resolve_resource_area()
+
+        if heritageId is not None and areaId is not None:
+            graphid = resource.graph_id
+
+            #raw query must be executed in order to join tables referring to a common
+            #external table (auth_group)
+            query = 'select ar.auth_role_id, ar.permission, ar.auth_group_id, ar.graph_id '\
+                    'from models_authrole ar join models_arearole ro '\
+                    'on ar.auth_group_id = ro.auth_group_id where ' \
+                    'ar.graph_id = UUID(\'' + str(graphid) + '\') and ro.user_id = ' + str(user.id) + ' ' \
+                    'and (ro.resource_instance_id = UUID(\'' + heritageId + '\') or ro.area_id=UUID(\'' + areaId + '\'))'
+
+            perms = AuthRole.objects.raw(query)
+
+            # no access without permissions
+            if len(perms) == 0:
+                results.add('no_access_to_resourceinstance')
+
+            #a user can have multiple roles on the same area or heritage resource
+            #remove the "no access" permission if another permission is available
+
+            has_no_access = False
+            for perm in perms:
+                # TODO risolvere successivamente i nomi dei ruoli
+                if perm.WRITE == perm.PERMISSIONS[perm.permission][0]:
+                    results.add('change_resourceinstance')
+                    results.add('view_resourceinstance')
+                elif perm.READ == perm.PERMISSIONS[perm.permission][0]:
+                    results.add('view_resourceinstance')
+                elif perm.NO_ACCESS == perm.PERMISSIONS[perm.permission][0]:
+                    has_no_access = True
+                elif perm.DELETE == perm.PERMISSIONS[perm.permission][0]:
+                    results.add('delete_resourceinstance')
+                    results.add('change_resourceinstance')
+                    results.add('view_resourceinstance')
+
+            if has_no_access and len(results) == 0:
+                results.add('no_access_to_resourceinstance')
+
+    except Exception as e:
+        logger.exception(e)
+
+    return list(results)
+
+
+
+def get_role_permissions_for_user(user):
+    from arches.app.models.models import AreaRole, AuthRole
+
+    permitted_instances = []
+    permitted_areas = []
+
+    user_roles = AreaRole.objects.filter(user=user)
+    for role in user_roles:
+        if role.resource_instance is not None:
+            role_perms = AuthRole.objects.filter(auth_group=role.auth_group)
+            for perm in role_perms:
+                if perm.NO_ACCESS != perm.PERMISSIONS[perm.permission][0]:
+                    permitted_instances.append(str(role.resource_instance_id) + "-" + str(perm.graph.graphid))
+        elif role.area is not None:
+            role_perms = AuthRole.objects.filter(auth_group=role.auth_group)
+            for perm in role_perms:
+                if perm.NO_ACCESS != perm.PERMISSIONS[perm.permission][0]:
+                    permitted_areas.append(str(role.area.valueid) + "-" + str(perm.graph.graphid))
+
+
+    return permitted_areas, permitted_instances
+
+
+class RoleGraphPermissions(object):
+    def __init__(self):
+        self._perms_cache = {}
+
+    def has_role_permissions(self, user, graphid, permissions):
+        from arches.app.models.models import AuthRole
+
+        if user.is_superuser:
+            return True
+        has_role = False
+        try:
+            graphid = str(graphid)
+            userid = str(user.id)
+            key = graphid + userid
+
+            if not key in self._perms_cache:
+                #raw query must be executed in order to join tables referring to a common
+                #external table (auth_group)
+                query = 'select ar.auth_role_id, ar.permission, ar.auth_group_id, ar.graph_id '\
+                        'from models_authrole ar join models_arearole ro '\
+                        'on ar.auth_group_id = ro.auth_group_id where ' \
+                        'ar.graph_id = UUID(\'' + graphid + '\') and ro.user_id = ' + userid
+
+                perms = AuthRole.objects.raw(query)
+                self._perms_cache[key] = perms
+            else:
+                perms = self._perms_cache[key]
+
+            if isinstance(permissions, str):
+                permissions = [permissions]
+
+            for permission in permissions:
+                if not permission.startswith('models.'):
+                    return None
+
+                for perm in perms:
+                    # TODO
+                    stored = perm.PERMISSIONS[perm.permission][0]
+                    if permission == "models." + perm.DELETE and stored == perm.DELETE:
+                        has_role = True
+                    elif permission == "models." + perm.WRITE and \
+                            (stored == perm.WRITE or stored == perm.DELETE):
+                        has_role = True
+                    elif permission == "models." + perm.READ and \
+                            (stored == perm.WRITE or stored == perm.DELETE or stored == perm.READ):
+                        has_role = True
+                    else:
+                        has_role = False
+
+        except Exception as e:
+            logger.exception(e)
+            has_role = False
+
+        return has_role

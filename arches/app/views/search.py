@@ -226,6 +226,45 @@ def append_instance_permission_filter_dsl(request, search_results_object):
         search_results_object["query"].add_query(has_access)
 
 
+def append_role_permission_filter_dsl(request, search_results_object):
+    from arches.app.utils.permission_backend import get_role_permissions_for_user
+    if request.user.is_superuser is False:
+        permitted_areas, permitted_instances = get_role_permissions_for_user(request.user)
+
+        matches = []
+        # match exactly the combination of permitted area and graph
+        # UUID are analyzed (decomposed)
+        for permitted_area in permitted_areas:
+            sub = {
+                "match_phrase": {
+                    "related_heritage_area_and_graph": {
+                            "query":  permitted_area
+                        }
+                }
+            }
+            matches.append(sub)
+
+        for permitted_instance in permitted_instances:
+            sub = {
+                "match_phrase": {
+                    "related_heritage_and_graph": {
+                            "query":  permitted_instance
+                        }
+                }
+            }
+            matches.append(sub)
+
+        query = {"bool": {
+            "should": matches,
+		    "minimum_should_match" : 1,
+            "must": [],
+            "must_not": [],
+            "filter": []
+        }}
+
+        search_results_object["query"].add_query(Bool(query))
+
+
 def search_results(request):
     for_export = request.GET.get("export")
     total = int(request.GET.get("total", "0"))
@@ -242,6 +281,7 @@ def search_results(request):
             if search_filter:
                 search_filter.append_dsl(search_results_object, permitted_nodegroups, include_provisional)
         append_instance_permission_filter_dsl(request, search_results_object)
+        append_role_permission_filter_dsl(request, search_results_object)
     except Exception as err:
         return JSONErrorResponse(message=err)
 
@@ -258,6 +298,7 @@ def search_results(request):
     dsl.include("displaydescription")
     dsl.include("map_popup")
     dsl.include("provisional_resource")
+    dsl.include("related_heritage_area_and_graph")
     if request.GET.get("tiles", None) is not None:
         dsl.include("tiles")
 

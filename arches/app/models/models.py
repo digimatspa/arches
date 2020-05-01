@@ -1255,3 +1255,47 @@ class IIIFManifest(models.Model):
     class Meta:
         managed = True
         db_table = "iiif_manifests"
+
+
+from arches.app.models.card import Card
+from arches.app.models.resource import Resource
+from arches.app.models.models import Concept
+
+
+from django.db import models
+
+
+class AuthGroup(models.Model):
+    id = models.BigIntegerField(primary_key=True, auto_created=True)
+    group = models.OneToOneField(to=Group, on_delete=models.CASCADE)
+    send_notifications = models.BooleanField(default=False)
+    validate_decay = models.BooleanField(default=False)
+    validate_instability = models.BooleanField(default=False)
+    validate_vegetation = models.BooleanField(default=False)
+
+class AuthRole(models.Model):
+    READ = "read_nodegroup"
+    WRITE = "write_nodegroup"
+    DELETE = "delete_nodegroup"
+    NO_ACCESS = "no_access_to_nodegroup"
+    PERMISSIONS =  (
+        ("read_nodegroup", "Read"),
+            ("write_nodegroup", "Create/Update"),
+            ("delete_nodegroup", "Delete"),
+            ("no_access_to_nodegroup", "No Access")
+    )
+
+    auth_role_id = models.BigIntegerField(primary_key=True, auto_created=True) 
+    permission = models.PositiveIntegerField(
+        choices=PERMISSIONS,
+        default=NO_ACCESS
+    )
+    auth_group = models.ForeignKey(to=AuthGroup, on_delete=models.CASCADE)
+    graph = models.ForeignKey(to=GraphModel, on_delete=models.CASCADE)
+
+class AreaRole(models.Model):
+    area_role_id = models.BigIntegerField(primary_key=True, auto_created=True)
+    area = models.ForeignKey(to=Value, on_delete=models.CASCADE)
+    resource_instance = models.ForeignKey(to=Resource, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='area_role_user')
+    auth_group = models.ForeignKey(to=AuthGroup, on_delete=models.CASCADE)

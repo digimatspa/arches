@@ -113,7 +113,7 @@ class Bool(Dsl):
     """
 
     def __init__(self, dsl=None, **kwargs):
-        self.dsl = {"bool": {"should": [], "must": [], "must_not": [], "filter": []}}
+        self.dsl = {"bool": {"should": [], "must": [], "must_not": [], "filter": [], "minimum_should_match":0}}
         if isinstance(dsl, dict):
             self.dsl["bool"] = dsl["bool"]
         elif isinstance(dsl, Bool):
@@ -154,6 +154,7 @@ class Bool(Dsl):
         self.dsl["bool"]["should"] = self.dsl["bool"]["should"] + object.dsl["bool"]["should"]
         self.dsl["bool"]["must_not"] = self.dsl["bool"]["must_not"] + object.dsl["bool"]["must_not"]
         self.dsl["bool"]["filter"] = self.dsl["bool"]["filter"] + object.dsl["bool"]["filter"]
+        self.dsl["bool"]["minimum_should_match"] = self.dsl["bool"]["minimum_should_match"] + object.dsl["bool"]["minimum_should_match"]
 
         return self
 

@@ -225,6 +225,31 @@ class Resource(models.ResourceInstance):
                 document, doc_id = es_index.get_documents_to_index(self, document["tiles"])
                 es_index.index_document(document=document, id=doc_id)
 
+    def resolve_resource_area(self):
+        heritageId = None
+        areaId = None
+
+        try:
+            # TODO: spostare
+            heritage_graph_id = '99417385-b8fa-11e6-84a5-026d961c88e6'
+            heritage_field_name = 'Bene archeologico'
+            area_field_name = 'Area archeologica'
+
+            if str(self.graph.graphid) != heritage_graph_id:
+                # find related heritage instance
+                heritageId_res = self.get_node_values(heritage_field_name)
+                if len(heritageId_res) > 0:
+                    heritageId = heritageId_res[0]
+                    heritage_resource = Resource.objects.get(pk=heritageId)
+                    areaId = heritage_resource.get_node_values(area_field_name, False)[0]
+            else:
+                heritageId = str(self.resourceinstanceid)
+                areaId = self.get_node_values(area_field_name, False)[0]
+        except Exception as e:
+            logger.exception(e)
+
+        return heritageId, areaId
+
     def get_documents_to_index(self, fetchTiles=True, datatype_factory=None, node_datatypes=None):
         """
         Gets all the documents nessesary to index a single resource
@@ -266,6 +291,11 @@ class Resource(models.ResourceInstance):
         document["date_ranges"] = []
         document["ids"] = []
         document["provisional_resource"] = "true" if sum([len(t.data) for t in tiles]) == 0 else "false"
+        heritageId, areaId = self.resolve_resource_area()
+        if heritageId is not None:
+            document["related_heritage_and_graph"] = heritageId + "-" + str(self.graph_id)
+        if areaId is not None:
+            document["related_heritage_area_and_graph"] = areaId + "-" + str(self.graph_id)
 
         terms = []
 
@@ -469,7 +499,7 @@ class Resource(models.ResourceInstance):
 
         return JSONSerializer().serializeToPython(ret)
 
-    def get_node_values(self, node_name):
+    def get_node_values(self, node_name, parse=True):
         """
         Take a node_name (string) as an argument and return a list of values.
         If an invalid node_name is used, or if multiple nodes with the same
@@ -493,9 +523,9 @@ class Resource(models.ResourceInstance):
                 if node_id == str(nodes[0].nodeid):
                     if type(value) is list:
                         for v in value:
-                            values.append(parse_node_value(v))
+                            values.append(parse_node_value(v) if parse else v)
                     else:
-                        values.append(parse_node_value(value))
+                        values.append(parse_node_value(value) if parse else value)
 
         return values
 
