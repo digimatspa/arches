@@ -40,6 +40,8 @@ class SystemSettings(LazySettings):
     SYSTEM_SETTINGS_RESOURCE_MODEL_ID = "ff623370-fa12-11e6-b98b-6c4008b05c4c"
     RESOURCE_INSTANCE_ID = "a106c400-260c-11e7-a604-14109fd34195"
 
+    VALIDATION_TYPES = ["Degrado", "Dissesto", "Vegetazione"]
+
     def __init__(self, *args, **kwargs):
         super(SystemSettings, self).__init__(*args, **kwargs)
         # print self

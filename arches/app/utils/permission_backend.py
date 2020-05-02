@@ -466,21 +466,32 @@ def get_role_permissions_for_resource(user, resource):
 def get_role_permissions_for_user(user):
     from arches.app.models.models import AreaRole, AuthRole
 
+    def get_validations(auth_group):
+        validations = []
+        if auth_group.validate_decay:
+            validations.append(settings.VALIDATION_TYPES[0])
+        if auth_group.validate_instability:
+            validations.append(settings.VALIDATION_TYPES[1])
+        if auth_group.validate_vegetation:
+            validations.append(settings.VALIDATION_TYPES[2])
+        return validations
+
     permitted_instances = []
     permitted_areas = []
 
     user_roles = AreaRole.objects.filter(user=user)
     for role in user_roles:
+        auth_group = role.auth_group
         if role.resource_instance is not None:
-            role_perms = AuthRole.objects.filter(auth_group=role.auth_group)
+            role_perms = AuthRole.objects.filter(auth_group=auth_group)
             for perm in role_perms:
                 if perm.NO_ACCESS != perm.PERMISSIONS[perm.permission][0]:
-                    permitted_instances.append(str(role.resource_instance_id) + "-" + str(perm.graph.graphid))
+                    permitted_instances.append((str(role.resource_instance_id), str(perm.graph.graphid), get_validations(auth_group)))
         elif role.area is not None:
-            role_perms = AuthRole.objects.filter(auth_group=role.auth_group)
+            role_perms = AuthRole.objects.filter(auth_group=auth_group)
             for perm in role_perms:
                 if perm.NO_ACCESS != perm.PERMISSIONS[perm.permission][0]:
-                    permitted_areas.append(str(role.area.valueid) + "-" + str(perm.graph.graphid))
+                    permitted_areas.append((str(role.area.valueid), str(perm.graph.graphid), get_validations(auth_group)))
 
 
     return permitted_areas, permitted_instances

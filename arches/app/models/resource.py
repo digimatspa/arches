@@ -293,9 +293,15 @@ class Resource(models.ResourceInstance):
         document["provisional_resource"] = "true" if sum([len(t.data) for t in tiles]) == 0 else "false"
         heritageId, areaId = self.resolve_resource_area()
         if heritageId is not None:
-            document["related_heritage_and_graph"] = heritageId + "-" + str(self.graph_id)
+            document["related_heritage"] = heritageId
         if areaId is not None:
-            document["related_heritage_area_and_graph"] = areaId + "-" + str(self.graph_id)
+            document["related_heritage_area"] = areaId
+
+        try:
+            # TODO spostare
+            document["validation_type"] = self.get_node_values("Categoria")
+        except Exception:
+            document["validation_type"] = None
 
         terms = []
 

@@ -228,37 +228,119 @@ def append_instance_permission_filter_dsl(request, search_results_object):
 
 def append_role_permission_filter_dsl(request, search_results_object):
     from arches.app.utils.permission_backend import get_role_permissions_for_user
+    from arches.app.models.system_settings import settings
+
     if request.user.is_superuser is False:
         permitted_areas, permitted_instances = get_role_permissions_for_user(request.user)
 
         matches = []
+        must_not = []
         # match exactly the combination of permitted area and graph
         # UUID are analyzed (decomposed)
         for permitted_area in permitted_areas:
-            sub = {
-                "match_phrase": {
-                    "related_heritage_area_and_graph": {
-                            "query":  permitted_area
+            for validation in set(settings.VALIDATION_TYPES) - set(permitted_area[2]):
+                sub_val = { "bool": {
+                    "must":
+                        [{
+                            "match_phrase": {
+                                "related_heritage_area": {
+                                        "query":  permitted_area[0]
+                                    }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "validation_type": {
+                                        "query":  validation
+                                    }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "graph_id": {
+                                        "query":  permitted_area[1]
+                                    }
+                            }
+                        }]
+                    }
+                }
+                must_not.append(sub_val)
+
+            sub = { "bool": {
+                "must":
+                    [{
+                        "match_phrase": {
+                            "related_heritage_area": {
+                                    "query":  permitted_area[0]
+                                }
                         }
+                    },
+                    {
+                        "match_phrase": {
+                            "graph_id": {
+                                    "query":  permitted_area[1]
+                                }
+                        }
+                    }]
                 }
             }
             matches.append(sub)
 
         for permitted_instance in permitted_instances:
-            sub = {
-                "match_phrase": {
-                    "related_heritage_and_graph": {
-                            "query":  permitted_instance
+            for validation in set(settings.VALIDATION_TYPES) - set(permitted_instance[2]):
+                sub_val = { "bool": {
+                    "must":
+                        [{
+                            "match_phrase": {
+                                "related_heritage": {
+                                        "query":  permitted_instance[0]
+                                    }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "validation_type": {
+                                        "query":  validation
+                                    }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "graph_id": {
+                                        "query":  permitted_instance[1]
+                                    }
+                            }
+                        }]
+                    }
+                }
+                must_not.append(sub_val)
+
+            sub = { "bool": {
+                "must":
+                    [{
+                        "match_phrase": {
+                            "related_heritage": {
+                                    "query":  permitted_instance[0]
+                                }
                         }
+                    },
+                    {
+                        "match_phrase": {
+                            "graph_id": {
+                                    "query":  permitted_instance[1]
+                                }
+                        }
+                    }]
                 }
             }
             matches.append(sub)
+
 
         query = {"bool": {
             "should": matches,
 		    "minimum_should_match" : 1,
             "must": [],
-            "must_not": [],
+            "must_not": must_not,
             "filter": []
         }}
 
