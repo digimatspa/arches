@@ -225,7 +225,7 @@ class Resource(models.ResourceInstance):
                 document, doc_id = es_index.get_documents_to_index(self, document["tiles"])
                 es_index.index_document(document=document, id=doc_id)
 
-    def resolve_resource_area(self):
+    def resolve_resource_area(self, provisional=False):
         heritageId = None
         areaId = None
 
@@ -237,14 +237,14 @@ class Resource(models.ResourceInstance):
 
             if str(self.graph.graphid) != heritage_graph_id:
                 # find related heritage instance
-                heritageId_res = self.get_node_values(heritage_field_name)
+                heritageId_res = self.get_node_values(heritage_field_name, provisional=provisional)
                 if len(heritageId_res) > 0:
                     heritageId = heritageId_res[0]
                     heritage_resource = Resource.objects.get(pk=heritageId)
-                    areaId = heritage_resource.get_node_values(area_field_name, False)[0]
+                    areaId = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
             else:
                 heritageId = str(self.resourceinstanceid)
-                areaId = self.get_node_values(area_field_name, False)[0]
+                areaId = self.get_node_values(area_field_name, False, provisional)[0]
         except Exception as e:
             logger.exception(e)
 
@@ -505,7 +505,7 @@ class Resource(models.ResourceInstance):
 
         return JSONSerializer().serializeToPython(ret)
 
-    def get_node_values(self, node_name, parse=True):
+    def get_node_values(self, node_name, parse=True, provisional=False):
         """
         Take a node_name (string) as an argument and return a list of values.
         If an invalid node_name is used, or if multiple nodes with the same
@@ -533,6 +533,18 @@ class Resource(models.ResourceInstance):
                     else:
                         values.append(parse_node_value(value) if parse else value)
 
+        if len(values) == 0 and provisional:
+            for tile in tiles:
+                for user, edit in tile.provisionaledits.items():
+                    if edit["status"] == "review":
+                        for node_id, value in edit["value"].items():
+                            if node_id == str(nodes[0].nodeid):
+                                if type(value) is list:
+                                    for v in value:
+                                        values.append(parse_node_value(v) if parse else v)
+                                else:
+                                    values.append(parse_node_value(value) if parse else value)
+
         return values
 
     def remove_resource_instance_permissions(self):
@@ -550,6 +562,10 @@ class Resource(models.ResourceInstance):
             assign_perm(permission, identity, self)
         self.index()
 
+    def is_provisional(self):
+        tiles = list(models.TileModel.objects.filter(resourceinstance=self))
+        resource_is_provisional = True if sum([len(t.data) for t in tiles]) == 0 else False
+        return resource_is_provisional
 
 def parse_node_value(value):
     if is_uuid(value):

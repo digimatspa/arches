@@ -47,6 +47,7 @@ class NotificationView(View):
                             logger = logging.getLogger(__name__)
                             logger.warn("Unable to access Notification.context: Does Not Exist. Badly formed Notification.")
                         notif["created"] = userxnotif.notif.created
+                        notif["context"] = userxnotif.notif.context
                         notif_dict_list.append(notif)
 
                 return JSONResponse({"success": True, "notifications": notif_dict_list}, status=200)

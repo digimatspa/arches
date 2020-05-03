@@ -41,6 +41,11 @@ class SystemSettings(LazySettings):
     RESOURCE_INSTANCE_ID = "a106c400-260c-11e7-a604-14109fd34195"
 
     VALIDATION_TYPES = ["Degrado", "Dissesto", "Vegetazione"]
+    SEG_MODEL_ID = "0eb358a6-3172-11ea-8080-080027c5bc64"
+    CATEGORY_NAME = "Categoria"
+    SEG_TYPE_NAME = "Tipo segnalazione"
+    SEG_TYPE_ALERT = "Urgente"
+
 
     def __init__(self, *args, **kwargs):
         super(SystemSettings, self).__init__(*args, **kwargs)

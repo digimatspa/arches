@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
     def start_worker(self, beat):
         if beat is True:
-            cmd = f"celery -A {settings.ELASTICSEARCH_PREFIX} worker -B -l info"
+            cmd = f"celery -A {settings.ELASTICSEARCH_PREFIX} worker -B -s /tmp/celerybeat-schedule -l info -c 1"
         else:
             cmd = f"celery -A {settings.ELASTICSEARCH_PREFIX} worker -l info"
         cmd_process = cmd.split()
