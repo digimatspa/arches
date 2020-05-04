@@ -291,7 +291,7 @@ class Resource(models.ResourceInstance):
         document["date_ranges"] = []
         document["ids"] = []
         document["provisional_resource"] = "true" if sum([len(t.data) for t in tiles]) == 0 else "false"
-        heritageId, areaId = self.resolve_resource_area()
+        heritageId, areaId = self.resolve_resource_area(provisional=True)
         if heritageId is not None:
             document["related_heritage"] = heritageId
         if areaId is not None:
@@ -299,7 +299,7 @@ class Resource(models.ResourceInstance):
 
         try:
             # TODO spostare
-            document["validation_type"] = self.get_node_values("Categoria")
+            document["validation_type"] = self.get_node_values("Categoria", provisional=True)
         except Exception:
             document["validation_type"] = None
 

@@ -1116,21 +1116,22 @@ def send_email_on_save(sender, instance, **kwargs):
             return False
 
         try:
-            context = instance.notif.context.copy()
-            text_content = render_to_string(instance.notif.notiftype.emailtemplate, context)
-            html_template = get_template(instance.notif.notiftype.emailtemplate)
-            html_content = html_template.render(context)
-            if context["email"] == instance.recipient.email:
-                email_to = instance.recipient.email
-            else:
-                email_to = context["email"]
-            subject, from_email, to = instance.notif.notiftype.name, "from@example.com", email_to
-            msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-            msg.attach_alternative(html_content, "text/html")
-            msg.send()
-            if instance.notif.notiftype.webnotify is not True:
-                instance.isread = True
-                instance.save()
+            if instance.notif.notiftype.emailnotify:
+                context = instance.notif.context.copy()
+                text_content = render_to_string(instance.notif.notiftype.emailtemplate, context)
+                html_template = get_template(instance.notif.notiftype.emailtemplate)
+                html_content = html_template.render(context)
+                if context["email"] == instance.recipient.email:
+                    email_to = instance.recipient.email
+                else:
+                    email_to = context["email"]
+                subject, from_email, to = instance.notif.notiftype.name, "from@example.com", email_to
+                msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+                if instance.notif.notiftype.webnotify is not True:
+                    instance.isread = True
+                    instance.save()
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.warn("Email Server not correctly set up. See settings to configure.")

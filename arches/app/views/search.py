@@ -380,7 +380,7 @@ def search_results(request):
     dsl.include("displaydescription")
     dsl.include("map_popup")
     dsl.include("provisional_resource")
-    dsl.include("related_heritage_area_and_graph")
+    dsl.include("related_heritage")
     if request.GET.get("tiles", None) is not None:
         dsl.include("tiles")
 
