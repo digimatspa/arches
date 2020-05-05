@@ -1296,7 +1296,7 @@ class AuthRole(models.Model):
 
 class AreaRole(models.Model):
     area_role_id = models.BigIntegerField(primary_key=True, auto_created=True)
-    area = models.ForeignKey(to=Value, on_delete=models.CASCADE)
+    area = models.ForeignKey(to=Value, on_delete=models.CASCADE, null=True)
     resource_instance = models.ForeignKey(to=Resource, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='area_role_user')
     auth_group = models.ForeignKey(to=AuthGroup, on_delete=models.CASCADE)
