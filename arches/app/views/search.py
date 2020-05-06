@@ -257,6 +257,13 @@ def append_role_permission_filter_dsl(request, search_results_object):
                         },
                         {
                             "match_phrase": {
+                                "provisional_resource": {
+                                        "query":  "true"
+                                    }
+                            }
+                        },
+                        {
+                            "match_phrase": {
                                 "graph_id": {
                                         "query":  permitted_area[1]
                                     }
@@ -306,6 +313,13 @@ def append_role_permission_filter_dsl(request, search_results_object):
                         },
                         {
                             "match_phrase": {
+                                "provisional_resource": {
+                                        "query":  "true"
+                                    }
+                            }
+                        },
+                        {
+                            "match_phrase": {
                                 "graph_id": {
                                         "query":  permitted_instance[1]
                                     }
@@ -335,6 +349,28 @@ def append_role_permission_filter_dsl(request, search_results_object):
             }
             matches.append(sub)
 
+        #no permissions set case
+        if len(permitted_areas) == 0 and len(permitted_instances) == 0:
+            # add dummy data that won't ever be matched
+            sub = { "bool": {
+                "must":
+                    [{
+                        "match_phrase": {
+                            "related_heritage": {
+                                    "query":  "no-access"
+                                }
+                        }
+                    },
+                    {
+                        "match_phrase": {
+                            "graph_id": {
+                                    "query":  "no-access"
+                                }
+                        }
+                    }]
+                }
+            }
+            matches.append(sub)
 
         query = {"bool": {
             "should": matches,

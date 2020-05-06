@@ -51,6 +51,9 @@ define([
                 helploading: this.viewModel.helploading
             });
 
+            this.INTERVAL = 10000;
+            this.timeout = null;
+
             _.defaults(this.viewModel, {
                 helpTemplate: ko.observable(viewData.help),
                 alert: ko.observable(null),
@@ -111,6 +114,14 @@ define([
                 },
                 getNotifications: function() {
                     self.viewModel.notifsList.updateList();
+                    self.viewModel.scheduleNewDataFetch();
+                },
+                scheduleNewDataFetch: function() {
+                    if (self.timeout) {
+                      clearTimeout(self.timeout);  
+                    }
+                    
+                    self.timeout = setTimeout(self.viewModel.getNotifications, self.INTERVAL);
                 }
             });
             self.viewModel.notifsList.items.subscribe(function(list) {

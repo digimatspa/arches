@@ -1267,7 +1267,7 @@ from django.db import models
 
 
 class AuthGroup(models.Model):
-    id = models.BigIntegerField(primary_key=True, auto_created=True)
+    id = models.AutoField(primary_key=True)
     group = models.OneToOneField(to=Group, on_delete=models.CASCADE)
     send_notifications = models.BooleanField(default=False)
     validate_decay = models.BooleanField(default=False)
@@ -1286,17 +1286,30 @@ class AuthRole(models.Model):
             ("no_access_to_nodegroup", "No Access")
     )
 
-    auth_role_id = models.BigIntegerField(primary_key=True, auto_created=True) 
+    READ_ = 0
+    WRITE_ = 1
+    DELETE_ = 2
+    NO_ACCESS_ = 3
+    
+    PERMISSIONS_ =  (
+        (0, "Read"),
+        (1, "Create/Update"),
+        (2, "Delete"),
+        (3, "No Access")
+    )
+
+    auth_role_id = models.AutoField(primary_key=True) 
     permission = models.PositiveIntegerField(
-        choices=PERMISSIONS,
-        default=NO_ACCESS
+        choices=PERMISSIONS_,
+        default=NO_ACCESS_
     )
     auth_group = models.ForeignKey(to=AuthGroup, on_delete=models.CASCADE)
     graph = models.ForeignKey(to=GraphModel, on_delete=models.CASCADE)
 
 class AreaRole(models.Model):
-    area_role_id = models.BigIntegerField(primary_key=True, auto_created=True)
+    area_role_id = models.AutoField(primary_key=True)
     area = models.ForeignKey(to=Value, on_delete=models.CASCADE, null=True)
     resource_instance = models.ForeignKey(to=Resource, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='area_role_user')
     auth_group = models.ForeignKey(to=AuthGroup, on_delete=models.CASCADE)
+
