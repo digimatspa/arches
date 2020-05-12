@@ -1273,6 +1273,7 @@ class AuthGroup(models.Model):
     validate_decay = models.BooleanField(default=False)
     validate_instability = models.BooleanField(default=False)
     validate_vegetation = models.BooleanField(default=False)
+    receive_alerts = models.BooleanField(default=False)
 
 class AuthRole(models.Model):
     READ = "read_nodegroup"
