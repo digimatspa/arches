@@ -4,7 +4,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("models", "2724_instance_permissions"),
+        ("models", "2726_authgroup_receive_alerts"),
     ]
 
     operations = [

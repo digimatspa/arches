@@ -1280,12 +1280,7 @@ class AuthRole(models.Model):
     WRITE = "write_nodegroup"
     DELETE = "delete_nodegroup"
     NO_ACCESS = "no_access_to_nodegroup"
-    PERMISSIONS =  (
-        ("read_nodegroup", "Read"),
-            ("write_nodegroup", "Create/Update"),
-            ("delete_nodegroup", "Delete"),
-            ("no_access_to_nodegroup", "No Access")
-    )
+    PERMISSIONS =  [READ, WRITE, DELETE, NO_ACCESS]
 
     READ_ = 0
     WRITE_ = 1

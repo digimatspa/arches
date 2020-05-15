@@ -2,7 +2,7 @@ from arches.app.models import models
 from arches.app.models.system_settings import settings
 from arches.app.search.elasticsearch_dsl_builder import Bool, Terms, NestedAgg, FiltersAgg, GeoHashGridAgg, GeoBoundsAgg
 from arches.app.search.components.base import BaseSearchFilter
-from arches.app.utils.permission_backend import user_is_resource_reviewer
+from arches.app.utils.permission_backend import user_is_resource_reviewer, user_can_edit_graph
 
 details = {
     "searchcomponentid": "",
@@ -50,6 +50,7 @@ class SearchResultsFilter(BaseSearchFilter):
         for result in results["hits"]["hits"]:
             result["_source"]["points"] = select_geoms_for_results(result["_source"]["points"], geojson_nodes, user_is_reviewer)
             result["_source"]["geometries"] = select_geoms_for_results(result["_source"]["geometries"], geojson_nodes, user_is_reviewer)
+            result["_source"]["canEditGraph"] = user_can_edit_graph(self.request.user, result["_source"]["graph_id"])
             try:
                 permitted_tiles = []
                 for tile in result["_source"]["tiles"]:
