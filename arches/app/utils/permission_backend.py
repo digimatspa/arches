@@ -15,8 +15,10 @@ from guardian.shortcuts import (
 )
 from guardian.exceptions import WrongAppError
 from django.contrib.auth.models import User, Group, Permission
-from arches.app.models.models import ResourceInstance, GraphModel
 import logging
+from arches.app.models.models import ResourceInstance, GraphModel
+from arches.app.search.search_engine_factory import SearchEngineFactory
+from arches.app.search.elasticsearch_dsl_builder import Bool, Query, Terms
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +83,28 @@ def get_restricted_users(resource):
                 result["no_access"].append(user.id)
 
     return result
+
+
+def get_restricted_instances(user):
+    if user.is_superuser is False:
+        se = SearchEngineFactory().create()
+        query = Query(se, start=0, limit=settings.SEARCH_RESULT_LIMIT)
+        has_access = Bool()
+        terms = Terms(field="permissions.users_with_no_access", terms=[str(user.id)])
+        has_access.must(terms)
+        query.add_query(has_access)
+        results = query.search(index="resources", scroll="1m")
+        scroll_id = results["_scroll_id"]
+        total = results["hits"]["total"]["value"]
+        if total > settings.SEARCH_RESULT_LIMIT:
+            pages = total // settings.SEARCH_RESULT_LIMIT
+            for page in range(pages):
+                results_scrolled = query.se.es.scroll(scroll_id=scroll_id, scroll="1m")
+                results["hits"]["hits"] += results_scrolled["hits"]["hits"]
+        restricted_ids = [res["_id"] for res in results["hits"]["hits"]]
+        return restricted_ids
+    else:
+        return []
 
 
 def get_groups_for_object(perm, obj):
@@ -189,6 +213,20 @@ def get_createable_resource_types(user):
     """
 
     return get_resource_types_by_perm(user, "models.write_nodegroup")
+
+
+def user_can_edit_graph(user, graphid):
+    """
+    returns true if a user can edit a graph
+
+    Arguments:
+    user -- the user to check
+    graphid -- the graph id
+
+    """
+    
+    perm_manager = RoleGraphPermissions()
+    return perm_manager.has_role_permissions(user, graphid, "models.write_nodegroup")
 
 
 def get_resource_types_by_perm(user, perms):
@@ -440,15 +478,14 @@ def get_role_permissions_for_resource(user, resource):
 
             has_no_access = False
             for perm in perms:
-                # TODO risolvere successivamente i nomi dei ruoli
-                if perm.WRITE == perm.PERMISSIONS[perm.permission][0]:
+                if perm.WRITE_ == perm.permission:
                     results.add('change_resourceinstance')
                     results.add('view_resourceinstance')
-                elif perm.READ == perm.PERMISSIONS[perm.permission][0]:
+                elif perm.READ_ == perm.permission:
                     results.add('view_resourceinstance')
-                elif perm.NO_ACCESS == perm.PERMISSIONS[perm.permission][0]:
+                elif perm.NO_ACCESS_ == perm.permission:
                     has_no_access = True
-                elif perm.DELETE == perm.PERMISSIONS[perm.permission][0]:
+                elif perm.DELETE_ == perm.permission:
                     results.add('delete_resourceinstance')
                     results.add('change_resourceinstance')
                     results.add('view_resourceinstance')
@@ -485,12 +522,12 @@ def get_role_permissions_for_user(user):
         if role.resource_instance is not None:
             role_perms = AuthRole.objects.filter(auth_group=auth_group)
             for perm in role_perms:
-                if perm.NO_ACCESS != perm.PERMISSIONS[perm.permission][0]:
+                if perm.NO_ACCESS_ != perm.permission:
                     permitted_instances.append((str(role.resource_instance_id), str(perm.graph.graphid), get_validations(auth_group)))
         elif role.area is not None:
             role_perms = AuthRole.objects.filter(auth_group=auth_group)
             for perm in role_perms:
-                if perm.NO_ACCESS != perm.PERMISSIONS[perm.permission][0]:
+                if perm.NO_ACCESS_ != perm.permission:
                     permitted_areas.append((str(role.area.valueid), str(perm.graph.graphid), get_validations(auth_group)))
 
 
@@ -533,18 +570,8 @@ class RoleGraphPermissions(object):
                     return None
 
                 for perm in perms:
-                    # TODO
-                    stored = perm.PERMISSIONS[perm.permission][0]
-                    if permission == "models." + perm.DELETE and stored == perm.DELETE:
-                        has_role = True
-                    elif permission == "models." + perm.WRITE and \
-                            (stored == perm.WRITE or stored == perm.DELETE):
-                        has_role = True
-                    elif permission == "models." + perm.READ and \
-                            (stored == perm.WRITE or stored == perm.DELETE or stored == perm.READ):
-                        has_role = True
-                    else:
-                        has_role = False
+                    if permission == "models." + perm.PERMISSIONS[perm.permission]:
+                        return True
 
         except Exception as e:
             logger.exception(e)

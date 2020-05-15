@@ -56,6 +56,9 @@ class SearchView(MapBaseManagerView):
         geocoding_providers = models.Geocoder.objects.all()
         search_components = models.SearchComponent.objects.all()
         datatypes = models.DDataType.objects.all()
+        widgets = models.Widget.objects.all()
+        templates = models.ReportTemplate.objects.all()
+        card_components = models.CardComponent.objects.all()
 
         context = self.get_context_data(
             map_layers=map_layers,
@@ -63,6 +66,9 @@ class SearchView(MapBaseManagerView):
             map_sources=map_sources,
             geocoding_providers=geocoding_providers,
             search_components=search_components,
+            widgets=widgets,
+            report_templates=templates,
+            card_components=card_components,
             main_script="views/search",
             resource_graphs=resource_graphs,
             datatypes=datatypes,
@@ -411,6 +417,7 @@ def search_results(request):
     dsl.include("permissions.users_without_read_perm")
     dsl.include("permissions.users_without_edit_perm")
     dsl.include("permissions.users_without_delete_perm")
+    dsl.include("permissions.users_with_no_access")
     dsl.include("geometries")
     dsl.include("displayname")
     dsl.include("displaydescription")
