@@ -15,7 +15,7 @@ from guardian.shortcuts import (
 )
 from guardian.exceptions import WrongAppError
 from django.contrib.auth.models import User, Group, Permission
-from arches.app.models.models import ResourceInstance
+from arches.app.models.models import ResourceInstance, GraphModel
 import logging
 
 logger = logging.getLogger(__name__)
@@ -204,12 +204,12 @@ def get_resource_types_by_perm(user, perms):
 
     graphs = set()
     perm_manager = RoleGraphPermissions()
-    nodegroups = get_nodegroups_by_perm(user, perms)
-    for node in Node.objects.filter(nodegroup__in=nodegroups).select_related("graph"):
-        if node.graph.isresource and str(node.graph_id) != settings.SYSTEM_SETTINGS_RESOURCE_MODEL_ID:
-            has_perm = perm_manager.has_role_permissions(user, node.graph.graphid, perms)
+
+    for graph in GraphModel.objects.filter(isresource=True):
+        if str(graph.graphid) != settings.SYSTEM_SETTINGS_RESOURCE_MODEL_ID:
+            has_perm = perm_manager.has_role_permissions(user, graph.graphid, perms)
             if has_perm is None or has_perm:
-                graphs.add(node.graph)
+                graphs.add(graph)
     return list(graphs)
 
 
