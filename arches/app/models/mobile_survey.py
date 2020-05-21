@@ -23,7 +23,7 @@ from PIL import Image
 from datetime import datetime
 from datetime import timedelta
 from copy import copy, deepcopy
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpRequest
 from django.utils.translation import ugettext as _
@@ -346,7 +346,7 @@ class MobileSurvey(models.MobileSurveyModel):
         sync_user = None
         sync_user_id = None
         if userid is not None:
-            sync_user = User.objects.get(pk=userid)
+            sync_user = get_user_model().objects.get(pk=userid)
             sync_user_id = str(sync_user.id)
 
         with transaction.atomic():

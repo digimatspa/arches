@@ -25,7 +25,7 @@ from datetime import timedelta
 from django.db import transaction
 from django.shortcuts import render
 from django.db.models import Count
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.contrib.gis.geos import MultiPolygon
 from django.contrib.gis.geos import Polygon
 from django.urls import reverse
@@ -48,6 +48,7 @@ from arches.app.models.system_settings import settings
 from arches.app.views.base import BaseManagerView
 from arches.app.views.base import MapBaseManagerView
 import arches.app.views.search as search
+from django.contrib.auth import get_user_model
 
 
 def get_survey_resources(mobile_survey):
@@ -170,7 +171,7 @@ class MobileSurveyDesignerView(MapBaseManagerView):
             identities.append(
                 {"name": group.name, "type": "group", "id": group.pk, "users": groupUsers, "default_permissions": group.permissions.all()}
             )
-        for user in User.objects.filter():
+        for user in get_user_model().objects.filter():
             groups = []
             group_ids = []
             default_perms = []
@@ -273,7 +274,7 @@ class MobileSurveyDesignerView(MapBaseManagerView):
         return HttpResponseNotFound()
 
     def update_identities(
-        self, data, mobile_survey, related_identities, identity_type="users", identity_model=User, xmodel=models.MobileSurveyXUser
+        self, data, mobile_survey, related_identities, identity_type="users", identity_model=get_user_model(), xmodel=models.MobileSurveyXUser
     ):
         mobile_survey_identity_ids = {u.id for u in related_identities}
         identities_to_remove = mobile_survey_identity_ids - set(data[identity_type])
@@ -300,7 +301,7 @@ class MobileSurveyDesignerView(MapBaseManagerView):
             mobile_survey_model.save()
 
         mobile_survey = MobileSurvey.objects.get(pk=data["id"])
-        self.update_identities(data, mobile_survey, mobile_survey.users.all(), "users", User, models.MobileSurveyXUser)
+        self.update_identities(data, mobile_survey, mobile_survey.users.all(), "users", get_user_model(), models.MobileSurveyXUser)
         self.update_identities(data, mobile_survey, mobile_survey.groups.all(), "groups", Group, models.MobileSurveyXGroup)
 
         mobile_survey_card_ids = {str(c.cardid) for c in mobile_survey.cards.all()}

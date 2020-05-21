@@ -5,6 +5,7 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
+from django.contrib.auth import get_user_model
 
 
 class Migration(migrations.Migration):
@@ -25,7 +26,7 @@ class Migration(migrations.Migration):
         resource_reviewer_group.permissions.add(read_nodegroup)
 
         try:
-            admin_user = User.objects.using(db_alias).get(username='admin')
+            admin_user = get_user_model().objects.using(db_alias).get(username='admin')
             admin_user.groups.add(resource_reviewer_group)
             print('added admin group')
         except Exception as e:
@@ -38,7 +39,7 @@ class Migration(migrations.Migration):
         User = apps.get_model("auth", "User")
 
         try:
-            admin_user = User.objects.using(db_alias).get(username='admin')
+            admin_user = get_user_model().objects.using(db_alias).get(username='admin')
             admin_user.groups.remove(resource_reviewer_group)
             print('removed admin group')
         except:

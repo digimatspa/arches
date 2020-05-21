@@ -25,7 +25,7 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from arches.app.models import models
@@ -281,7 +281,7 @@ class Tile(models.TileModel):
 
         if user_id is not None:
             user_id = str(user_id)
-            user = User.objects.get(pk=user_id)
+            user = get_user_model().objects.get(pk=user_id)
             user_is_reviewer = user_is_resource_reviewer(user)
             if user_is_reviewer is False and self.provisionaledits is not None and user_id in self.provisionaledits:
                 data = self.provisionaledits[user_id]["value"]

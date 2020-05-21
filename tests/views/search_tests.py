@@ -28,7 +28,7 @@ import json
 import time
 from tests.base_test import ArchesTestCase
 from django.urls import reverse
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.test.client import Client
 from arches.app.models import models
 from arches.app.models.resource import Resource
@@ -44,6 +44,7 @@ from arches.app.search.mappings import (
 from arches.app.utils.data_management.resource_graphs.importer import import_graph as ResourceGraphImporter
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
 from guardian.shortcuts import assign_perm
+from django.contrib.auth import get_user_model
 
 
 # these tests can be run from the command line via
@@ -77,7 +78,7 @@ class SearchTests(ArchesTestCase):
         cls.search_model_sensitive_info_nodeid = "57446fae-65ff-11e7-b63a-14109fd34195"
         cls.search_model_geom_nodeid = "3ebc6785-fa61-11e6-8c85-14109fd34195"
 
-        cls.user = User.objects.create_user("unpriviliged_user", "unpriviliged_user@archesproject.org", "test")
+        cls.user = get_user_model().objects.create_user("unpriviliged_user", "unpriviliged_user@archesproject.org", "test")
         cls.user.groups.add(Group.objects.get(name="Guest"))
 
         nodegroup = models.NodeGroup.objects.get(pk=cls.search_model_destruction_date_nodeid)
@@ -509,7 +510,7 @@ def get_response_json(client, temporal_filter=None, term_filter=None, spatial_fi
     if spatial_filter is not None:
         query["map-filter"] = JSONSerializer().serialize(spatial_filter)
     resource_reviewer_group = Group.objects.get(name="Resource Reviewer")
-    test_user = User.objects.get(username="unpriviliged_user")
+    test_user = get_user_model().objects.get(username="unpriviliged_user")
     test_user.groups.add(resource_reviewer_group)
     client.login(username="unpriviliged_user", password="test")
     response = client.get("/search/resources", query)

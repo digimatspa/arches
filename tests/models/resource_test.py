@@ -21,7 +21,7 @@ import os
 import time
 
 from tests import test_settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.core import management
 from django.urls import reverse
 from django.test.client import Client
@@ -44,6 +44,7 @@ from arches.app.utils.data_management.resource_graphs.importer import import_gra
 from arches.app.utils.exceptions import InvalidNodeNameException, MultipleNodesFoundException
 from arches.app.utils.index_database import index_resources_by_type
 from tests.base_test import ArchesTestCase
+from django.contrib.auth import get_user_model
 
 
 # these tests can be run from the command line via
@@ -80,7 +81,7 @@ class ResourceTests(ArchesTestCase):
         cls.search_model_sensitive_info_nodeid = "57446fae-65ff-11e7-b63a-14109fd34195"
         cls.search_model_geom_nodeid = "3ebc6785-fa61-11e6-8c85-14109fd34195"
 
-        cls.user = User.objects.create_user("test", "test@archesproject.org", "password")
+        cls.user = get_user_model().objects.create_user("test", "test@archesproject.org", "password")
         cls.user.groups.add(Group.objects.get(name="Guest"))
 
         nodegroup = models.NodeGroup.objects.get(pk=cls.search_model_destruction_date_nodeid)
@@ -233,7 +234,7 @@ class ResourceTests(ArchesTestCase):
         Test user that created instance has full permissions
         """
 
-        user = User.objects.create_user(username="sam", email="sam@samsclub.com", password="Test12345!")
+        user = get_user_model().objects.create_user(username="sam", email="sam@samsclub.com", password="Test12345!")
         user.save()
         group = Group.objects.get(name="Resource Editor")
         group.user_set.add(user)

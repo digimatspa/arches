@@ -31,7 +31,7 @@ from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
 from arches.app.utils.decorators import can_edit_resource_instance
 from arches.app.utils.permission_backend import user_is_resource_reviewer
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.http import HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
@@ -52,7 +52,7 @@ class TileData(View):
         if tile.provisionaledits is not None:
             provisionaledits = tile.provisionaledits
             if user in provisionaledits:
-                provisional_editor = User.objects.get(pk=user)
+                provisional_editor = get_user_model().objects.get(pk=user)
                 edit = provisionaledits[user]
                 provisionaledits.pop(user)
                 if len(provisionaledits) == 0:
@@ -143,7 +143,7 @@ class TileData(View):
                                         return JSONResponse({"status": "false", "message": [_(e.title), _(str(message))]}, status=500)
                                 else:
                                     if accepted_provisional is not None:
-                                        provisional_editor = User.objects.get(pk=accepted_provisional_edit["user"])
+                                        provisional_editor = get_user_model().objects.get(pk=accepted_provisional_edit["user"])
                                         prov_edit_log_details = {
                                             "user": request.user,
                                             "action": "accept edit",
@@ -230,7 +230,7 @@ class TileData(View):
                         if tile.is_provisional() is True and len(list(tile.provisionaledits.keys())) == 1:
                             provisional_editor_id = list(tile.provisionaledits.keys())[0]
                             edit = tile.provisionaledits[provisional_editor_id]
-                            provisional_editor = User.objects.get(pk=provisional_editor_id)
+                            provisional_editor = get_user_model().objects.get(pk=provisional_editor_id)
                             reviewer = request.user
                             tile.delete(
                                 request=request,

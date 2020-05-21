@@ -27,13 +27,14 @@ import base64
 from tests.base_test import ArchesTestCase, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, CREATE_TOKEN_SQL
 from django.db import connection
 from django.urls import reverse
-from django.contrib.auth.models import User, Group, AnonymousUser
+from django.contrib.auth.models import Group, AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory
 from django.test.client import Client
 from arches.app.views.auth import LoginView
 from arches.app.views.concept import RDMView
 from arches.app.utils.middleware import SetAnonymousUser
+from django.contrib.auth import get_user_model
 
 # these tests can be run from the command line via
 # python manage.py test tests/views/auth_tests.py --pattern="*.py" --settings="tests.test_settings"
@@ -44,11 +45,11 @@ class AuthTests(ArchesTestCase):
     def setUpClass(cls):
         cls.factory = RequestFactory()
         cls.client = Client()
-        cls.user = User.objects.create_user("test", "test@archesproject.org", "password")
+        cls.user = get_user_model().objects.create_user("test", "test@archesproject.org", "password")
 
         rdm_admin_group = Group.objects.get(name="RDM Administrator")
         cls.user.groups.add(rdm_admin_group)
-        cls.anonymous_user = User.objects.get(username="anonymous")
+        cls.anonymous_user = get_user_model().objects.get(username="anonymous")
 
         cls.token = "abc"
         cls.oauth_client_id = OAUTH_CLIENT_ID

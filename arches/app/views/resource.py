@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import uuid
 import json
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import HttpResponseNotFound
@@ -64,6 +64,7 @@ from guardian.shortcuts import (
     get_perms_for_model,
 )
 import logging
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
 
@@ -342,7 +343,7 @@ class ResourcePermissionDataView(View):
                 "type": "user",
                 "default_permissions": self.get_perms(user, "user", resource_instance, ordered_perms),
             }
-            for user in User.objects.all()
+            for user in get_user_model().objects.all()
         ]
         identities += [
             {
@@ -365,7 +366,7 @@ class ResourcePermissionDataView(View):
         resource.graph_id = graphid if graphid else str(models.ResourceInstance.objects.get(pk=resourceinstanceid).graph_id)
         resource.add_permission_to_all("no_access_to_resourceinstance")
         instance_creator = get_instance_creator(resource)
-        user = User.objects.get(pk=instance_creator["creatorid"])
+        user = get_user_model().objects.get(pk=instance_creator["creatorid"])
         assign_perm("view_resourceinstance", user, resource)
         assign_perm("change_resourceinstance", user, resource)
         assign_perm("delete_resourceinstance", user, resource)
@@ -386,7 +387,7 @@ class ResourcePermissionDataView(View):
                     if identity["type"] == "group":
                         identityModel = Group.objects.get(pk=identity["id"])
                     else:
-                        identityModel = User.objects.get(pk=identity["id"])
+                        identityModel = get_user_model().objects.get(pk=identity["id"])
 
                     instance_creator = get_instance_creator(resource_instance, user)
                     creator = instance_creator["creatorid"]

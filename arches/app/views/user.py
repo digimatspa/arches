@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import json
 from datetime import datetime
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 import django.contrib.auth.password_validation as validation
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
@@ -35,6 +35,7 @@ from arches.app.views.base import BaseManagerView
 from arches.app.utils.forms import ArchesUserProfileForm
 from arches.app.utils.response import JSONResponse
 from arches.app.utils.permission_backend import user_is_resource_reviewer
+from django.contrib.auth import get_user_model
 
 
 class UserManagerView(BaseManagerView):
@@ -68,7 +69,7 @@ class UserManagerView(BaseManagerView):
             identities.append(
                 {"name": group.name, "type": "group", "id": group.pk, "users": groupUsers, "default_permissions": group.permissions.all()}
             )
-        for user in User.objects.filter():
+        for user in get_user_model().objects.filter():
             groups = []
             group_ids = []
             default_perms = []
@@ -132,7 +133,7 @@ class UserManagerView(BaseManagerView):
             data = {}
             if self.request.user.is_authenticated and user_is_resource_reviewer(request.user):
                 userids = json.loads(request.POST.get("userids", "[]"))
-                data = {u.id: u.username for u in User.objects.filter(id__in=userids)}
+                data = {u.id: u.username for u in get_user_model().objects.filter(id__in=userids)}
                 return JSONResponse(data)
 
         if self.request.user.is_authenticated and self.request.user.username != "anonymous":

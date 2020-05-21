@@ -28,7 +28,7 @@ from django.utils.translation import ugettext as _
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseNotFound, HttpResponse
 from django.views.generic import View, TemplateView
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from arches.app.utils.decorators import group_required
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
@@ -46,6 +46,7 @@ from arches.app.views.base import BaseManagerView
 from guardian.shortcuts import assign_perm, get_perms, remove_perm, get_group_perms, get_user_perms
 from io import BytesIO
 from elasticsearch.exceptions import RequestError
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
 
@@ -605,7 +606,7 @@ class PermissionDataView(View):
             identities = []
             for group in Group.objects.all():
                 identities.append({"name": group.name, "type": "group", "id": group.pk, "default_permissions": group.permissions.all()})
-            for user in User.objects.filter(is_superuser=False):
+            for user in get_user_model().objects.filter(is_superuser=False):
                 groups = []
                 default_perms = []
                 for group in user.groups.all():
@@ -640,7 +641,7 @@ class PermissionDataView(View):
                 ]
                 ret.append({"perms": perms, "nodegroup_id": nodegroup_id})
         else:
-            identity = User.objects.get(pk=identityId)
+            identity = get_user_model().objects.get(pk=identityId)
             for nodegroup_id in nodegroup_ids:
                 nodegroup = models.NodeGroup.objects.get(pk=nodegroup_id)
                 perms = [
@@ -673,7 +674,7 @@ class PermissionDataView(View):
                 if identity["type"] == "group":
                     identityModel = Group.objects.get(pk=identity["id"])
                 else:
-                    identityModel = User.objects.get(pk=identity["id"])
+                    identityModel = get_user_model().objects.get(pk=identity["id"])
 
                 for card in data["selectedCards"]:
                     # TODO The following try block is here because the key for the nodegroupid in the new permission manager

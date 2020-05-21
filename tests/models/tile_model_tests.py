@@ -27,7 +27,7 @@ from tests import test_settings
 from tests.base_test import ArchesTestCase
 from django.db import connection
 from django.core import management
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from arches.app.models.tile import Tile
 from arches.app.search.mappings import (
@@ -208,7 +208,7 @@ class TileTests(ArchesTestCase):
 
         """
 
-        self.user = User.objects.get(username="admin")
+        self.user = get_user_model().objects.get(username="admin")
 
         json = {
             "resourceinstance_id": "40000000-0000-0000-0000-000000000000",
@@ -223,7 +223,7 @@ class TileTests(ArchesTestCase):
         request.user = self.user
         authoritative_tile.save(index=False, request=request)
 
-        self.user = User.objects.create_user(username="testuser", password="TestingTesting123!")
+        self.user = get_user_model().objects.create_user(username="testuser", password="TestingTesting123!")
 
         json = {
             "resourceinstance_id": "40000000-0000-0000-0000-000000000000",
@@ -268,7 +268,7 @@ class TileTests(ArchesTestCase):
 
         t = Tile(json)
         t.save(index=False)
-        self.user = User.objects.create_user(username="testuser", password="TestingTesting123!")
+        self.user = get_user_model().objects.create_user(username="testuser", password="TestingTesting123!")
         login = self.client.login(username="testuser", password="TestingTesting123!")
         tiles = Tile.objects.filter(resourceinstance_id="40000000-0000-0000-0000-000000000000")
 
@@ -301,7 +301,7 @@ class TileTests(ArchesTestCase):
             "data": {"72048cb3-adbc-11e6-9ccf-14109fd34195": "TEST 1"},
         }
 
-        user = User.objects.create_user(username="testuser", password="TestingTesting123!")
+        user = get_user_model().objects.create_user(username="testuser", password="TestingTesting123!")
         provisional_tile = Tile(json)
         request = HttpRequest()
         request.user = user
@@ -329,7 +329,7 @@ class TileTests(ArchesTestCase):
             "data": {"72048cb3-adbc-11e6-9ccf-14109fd34195": "TEST 1"},
         }
 
-        user = User.objects.create_user(username="testuser", password="TestingTesting123!")
+        user = get_user_model().objects.create_user(username="testuser", password="TestingTesting123!")
         provisional_tile = Tile(json)
         request = HttpRequest()
         request.user = user
@@ -351,8 +351,8 @@ class TileTests(ArchesTestCase):
             "data": {"72048cb3-adbc-11e6-9ccf-14109fd34195": "TEST 1"},
         }
 
-        owner = User.objects.create_user(username="testuser", password="TestingTesting123!")
-        reviewer = User.objects.get(username="admin")
+        owner = get_user_model().objects.create_user(username="testuser", password="TestingTesting123!")
+        reviewer = get_user_model().objects.get(username="admin")
 
         tile1 = Tile(json)
         owner_request = HttpRequest()
@@ -384,8 +384,8 @@ class TileTests(ArchesTestCase):
             "data": {"72048cb3-adbc-11e6-9ccf-14109fd34195": "TEST 1"},
         }
 
-        provisional_user = User.objects.create_user(username="testuser", password="TestingTesting123!")
-        reviewer = User.objects.get(username="admin")
+        provisional_user = get_user_model().objects.create_user(username="testuser", password="TestingTesting123!")
+        reviewer = get_user_model().objects.get(username="admin")
 
         tile = Tile(json)
         reviewer_request = HttpRequest()

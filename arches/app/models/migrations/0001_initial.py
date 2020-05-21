@@ -10,6 +10,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import migrations, models
 from arches.db.migration_operations.extras import CreateExtension, CreateAutoPopulateUUIDField, CreateFunction
 from arches.app.models.system_settings import settings
+from django.contrib.auth import get_user_model
 
 
 def get_sql_string_from_file(pathtofile):
@@ -39,7 +40,7 @@ def reverse_func(apps, schema_editor):
 def make_permissions(apps, schema_editor, with_create_permissions=True):
     db_alias = schema_editor.connection.alias
     Group = apps.get_model("auth", "Group")
-    User = apps.get_model("auth", "User")
+    User = get_user_model()
     Permission = apps.get_model("auth", "Permission")
     try:
         read_nodegroup = Permission.objects.using(db_alias).get(

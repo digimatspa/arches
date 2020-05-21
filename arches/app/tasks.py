@@ -4,7 +4,7 @@ import logging
 from celery import shared_task
 from datetime import datetime
 from datetime import timedelta
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core import management
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
@@ -55,7 +55,7 @@ def export_search_results(self, userid, request_values, format):
     settings.update_from_db()
 
     create_user_task_record(self.request.id, self.name, userid)
-    _user = User.objects.get(id=userid)
+    _user = get_user_model().objects.get(id=userid)
     email = request_values["email"]
     export_name = request_values["exportName"][0]
     new_request = HttpRequest()
@@ -101,7 +101,7 @@ def package_load_complete(*args, msg=None):
     if msg is None:
         msg = "Resources have completed loading."
     notifytype_name = "Package Load Complete"
-    user = User.objects.get(id=1)
+    user = get_user_model().objects.get(id=1)
     context = dict(
         greeting="Hello,\nYour package has successfully loaded into your Arches project.",
         link="",
@@ -156,13 +156,13 @@ def on_chord_error(request, exc, traceback):
     logger.warn(exc)
     logger.warn(traceback)
     msg = f"Package Load erred on import_business_data. Exception: {exc}. See logs for details."
-    user = User.objects.get(id=1)
+    user = get_user_model().objects.get(id=1)
     notify_completion(msg, user)
 
 
 def create_user_task_record(taskid, taskname, userid):
     try:
-        user = User.objects.get(id=userid)
+        user = get_user_model().objects.get(id=userid)
         new_task_record = models.UserXTask.objects.create(user=user, taskid=taskid, datestart=datetime.now(), name=taskname)
     except Exception as e:
         logger = logging.getLogger(__name__)

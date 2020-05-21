@@ -24,7 +24,7 @@ from time import time
 from uuid import UUID
 from django.db import transaction
 from django.db.models import Q
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 from arches.app.models import models
@@ -44,6 +44,7 @@ from arches.app.utils.exceptions import (
 )
 from arches.app.utils.permission_backend import user_is_resource_reviewer, get_users_for_object, get_restricted_users
 from arches.app.datatypes.datatypes import DataTypeFactory
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
 
@@ -549,7 +550,7 @@ class Resource(models.ResourceInstance):
 
     def remove_resource_instance_permissions(self):
         groups = list(Group.objects.all())
-        users = [user for user in User.objects.all() if user.is_superuser is False]
+        users = [user for user in get_user_model().objects.all() if user.is_superuser is False]
         for identity in groups + users:
             for perm in ["no_access_to_resourceinstance", "view_resourceinstance", "change_resourceinstance", "delete_resourceinstance"]:
                 remove_perm(perm, identity, self)
@@ -557,7 +558,7 @@ class Resource(models.ResourceInstance):
 
     def add_permission_to_all(self, permission):
         groups = list(Group.objects.all())
-        users = [user for user in User.objects.all() if user.is_superuser is False]
+        users = [user for user in get_user_model().objects.all() if user.is_superuser is False]
         for identity in groups + users:
             assign_perm(permission, identity, self)
         self.index()

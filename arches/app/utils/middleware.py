@@ -1,7 +1,7 @@
 import time
 from django.urls import reverse
 from django.http import HttpResponse
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
 from django.utils.six import text_type
@@ -9,6 +9,7 @@ from django.utils.translation import ugettext as _
 from arches.app.models.system_settings import settings
 from arches.app.utils.response import Http401Response
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
+from django.contrib.auth import get_user_model
 
 HTTP_HEADER_ENCODING = "iso-8859-1"
 
@@ -20,7 +21,7 @@ class SetAnonymousUser(MiddlewareMixin):
         # used for all OAuth resourse requests
         if request.path != reverse("oauth2:authorize") and request.user.is_anonymous:
             try:
-                request.user = User.objects.get(username="anonymous")
+                request.user = get_user_model().objects.get(username="anonymous")
             except Exception:
                 pass
 

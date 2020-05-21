@@ -14,11 +14,12 @@ from guardian.shortcuts import (
     assign_perm,
 )
 from guardian.exceptions import WrongAppError
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 import logging
 from arches.app.models.models import ResourceInstance, GraphModel
 from arches.app.search.search_engine_factory import SearchEngineFactory
 from arches.app.search.elasticsearch_dsl_builder import Bool, Query, Terms
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +150,7 @@ def get_users_for_object(perm, obj):
     """
 
     ret = []
-    for user in User.objects.all():
+    for user in get_user_model().objects.all():
         if user.has_perm(perm, obj):
             ret.append(user)
     return ret

@@ -31,7 +31,7 @@ from django.core import management
 from django.urls import reverse
 from django.test.client import RequestFactory, Client
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm, get_perms, remove_perm, get_group_perms, get_user_perms
 from arches.app.models.models import ResourceInstance, Node
@@ -65,7 +65,7 @@ class PermissionTests(ArchesTestCase):
         self.client = Client()
         self.data_type_graphid = "330802c5-95bd-11e8-b7ac-acde48001122"
         self.resource_instance_id = "f562c2fa-48d3-4798-a723-10209806c068"
-        self.user = User.objects.get(username="ben")
+        self.user = get_user_model().objects.get(username="ben")
         self.group = Group.objects.get(pk=2)
         resource = Resource(pk=self.resource_instance_id)
         resource.graph_id = self.data_type_graphid
@@ -89,7 +89,7 @@ class PermissionTests(ArchesTestCase):
 
         for profile in profiles:
             try:
-                user = User.objects.create_user(username=profile["name"], email=profile["email"], password=profile["password"])
+                user = get_user_model().objects.create_user(username=profile["name"], email=profile["email"], password=profile["password"])
                 user.save()
                 print(("Added: {0}, password: {1}".format(user.username, user.password)))
 
@@ -153,9 +153,9 @@ class PermissionTests(ArchesTestCase):
         resource = ResourceInstance.objects.get(resourceinstanceid=self.resource_instance_id)
         assign_perm("no_access_to_resourceinstance", self.group, resource)
         ben = self.user
-        jim = User.objects.get(username="jim")
-        sam = User.objects.get(username="sam")
-        admin = User.objects.get(username="admin")
+        jim = get_user_model().objects.get(username="jim")
+        sam = get_user_model().objects.get(username="sam")
+        admin = get_user_model().objects.get(username="admin")
         assign_perm("view_resourceinstance", ben, resource)
         assign_perm("change_resourceinstance", jim, resource)
 

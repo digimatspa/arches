@@ -1,11 +1,11 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 
 
 class EmailAuthenticationBackend(object):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
-            user = User.objects.get(email=username)
+            user = get_user_model().objects.get(email=username)
             if user.check_password(password) and self.user_can_authenticate(user):
                 return user
             else:
@@ -25,6 +25,6 @@ class EmailAuthenticationBackend(object):
 
     def get_user(self, user_id):
         try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
+            return get_user_model().objects.get(pk=user_id)
+        except get_user_model().DoesNotExist:
             return None

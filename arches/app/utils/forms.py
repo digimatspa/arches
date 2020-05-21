@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, SetPasswordForm
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms.widgets import PasswordInput, TextInput
 from django.utils.translation import ugettext as _
@@ -50,13 +50,13 @@ class ArchesUserCreationForm(UserCreationForm):
     ts = forms.IntegerField(required=False)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ("email", "username", "first_name", "last_name", "ts")
 
     def clean(self):
         cleaned_data = super(ArchesUserCreationForm, self).clean()
         if "email" in cleaned_data:
-            if User.objects.filter(email=cleaned_data["email"]).count() > 0:
+            if get_user_model().objects.filter(email=cleaned_data["email"]).count() > 0:
                 self.add_error(
                     "email",
                     forms.ValidationError(
@@ -85,14 +85,14 @@ class ArchesUserProfileForm(ArchesUserCreationForm):
     password2 = forms.CharField(required=False)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ("email", "username", "first_name", "last_name", "id")
 
     def clean(self):
         pass
 
     def save(self):
-        user = User.objects.get(username=self.instance.username)
+        user = get_user_model().objects.get(username=self.instance.username)
         with transaction.atomic():
             user.first_name = self.cleaned_data["first_name"]
             user.last_name = self.cleaned_data["last_name"]
