@@ -30,7 +30,7 @@ from django.utils.http import urlencode
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 import django.contrib.auth.password_validation as validation

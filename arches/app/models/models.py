@@ -27,7 +27,7 @@ from django.db.models import Q, Max
 from django.db.models.signals import post_delete, pre_save, post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext as _
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.validators import validate_slug
 
@@ -723,7 +723,7 @@ class SearchComponent(models.Model):
 
 class SearchExportHistory(models.Model):
     searchexportid = models.UUIDField(primary_key=True, default=uuid.uuid1)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     exporttime = models.DateTimeField(auto_now_add=True)
     numberofinstances = models.IntegerField()
     url = models.TextField()
@@ -983,7 +983,7 @@ class GraphXMapping(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
     phone = models.CharField(max_length=16, blank=True)
 
     def is_reviewer(self):
@@ -1024,7 +1024,7 @@ class UserXTask(models.Model):
     datestart = models.DateTimeField(blank=True, null=True)
     datedone = models.DateTimeField(blank=True, null=True)
     name = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     class Meta:
         managed = True
@@ -1079,7 +1079,7 @@ class UserXNotification(models.Model):
     id = models.UUIDField(primary_key=True, serialize=False, default=uuid.uuid1)
     notif = models.ForeignKey(Notification, on_delete=models.CASCADE)
     isread = models.BooleanField(default=False)
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipient = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     class Meta:
         managed = True
@@ -1096,7 +1096,7 @@ class UserXNotificationType(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid1)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     notiftype = models.ForeignKey(NotificationType, on_delete=models.CASCADE)
     emailnotify = models.BooleanField(default=False)
     webnotify = models.BooleanField(default=False)
@@ -1147,9 +1147,9 @@ class MobileSurveyModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid1)
     name = models.TextField(null=True)
     active = models.BooleanField(default=False)
-    createdby = models.ForeignKey(User, related_name="createdby", on_delete=models.CASCADE)
-    lasteditedby = models.ForeignKey(User, related_name="lasteditedby", on_delete=models.CASCADE)
-    users = models.ManyToManyField(to=User, through="MobileSurveyXUser")
+    createdby = models.ForeignKey(get_user_model(), related_name="createdby", on_delete=models.CASCADE)
+    lasteditedby = models.ForeignKey(get_user_model(), related_name="lasteditedby", on_delete=models.CASCADE)
+    users = models.ManyToManyField(to=get_user_model(), through="MobileSurveyXUser")
     groups = models.ManyToManyField(to=Group, through="MobileSurveyXGroup")
     cards = models.ManyToManyField(to=CardModel, through="MobileSurveyXCard")
     startdate = models.DateField(blank=True, null=True)
@@ -1183,7 +1183,7 @@ class MobileSurveyModel(models.Model):
 
 class MobileSurveyXUser(models.Model):
     mobile_survey_x_user_id = models.UUIDField(primary_key=True, serialize=False, default=uuid.uuid1)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     mobile_survey = models.ForeignKey(MobileSurveyModel, on_delete=models.CASCADE, null=True)
 
     class Meta:
@@ -1306,6 +1306,6 @@ class AreaRole(models.Model):
     area_role_id = models.AutoField(primary_key=True)
     area = models.ForeignKey(to=Value, on_delete=models.CASCADE, null=True)
     resource_instance = models.ForeignKey(to=Resource, on_delete=models.CASCADE, null=True)
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='area_role_user')
+    user = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name='area_role_user')
     auth_group = models.ForeignKey(to=AuthGroup, on_delete=models.CASCADE)
 

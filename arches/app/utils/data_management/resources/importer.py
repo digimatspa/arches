@@ -20,7 +20,6 @@ import django
 # see https://stackoverflow.com/a/49461944/3873885
 django.setup()
 from django.db import connection, connections, transaction
-from django.contrib.auth.models import User
 from django.contrib.gis.gdal import DataSource
 from django.forms.models import model_to_dict
 from django.core.management.base import BaseCommand, CommandError

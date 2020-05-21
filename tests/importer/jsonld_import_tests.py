@@ -8,7 +8,7 @@ from tests import test_settings
 from operator import itemgetter
 from django.core import management
 from django.test.client import RequestFactory, Client
-from django.contrib.auth.models import User, Group, AnonymousUser
+from django.contrib.auth.models import Group, AnonymousUser
 from django.urls import reverse
 from django.db import connection
 from tests.base_test import ArchesTestCase, CREATE_TOKEN_SQL

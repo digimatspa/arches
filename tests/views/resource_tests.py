@@ -32,7 +32,7 @@ from django.urls import reverse
 from arches.app.models.models import ResourceInstance, EditLog
 from django.test.client import RequestFactory, Client
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm, get_perms, remove_perm, get_group_perms, get_user_perms
 from arches.app.search.mappings import (
@@ -64,7 +64,7 @@ def add_users():
 
     for profile in profiles:
         try:
-            user = User.objects.create_user(username=profile["name"], email=profile["email"], password=profile["password"])
+            user = get_user_model().objects.create_user(username=profile["name"], email=profile["email"], password=profile["password"])
             user.save()
             print(("Added: {0}, password: {1}".format(user.username, user.password)))
 
@@ -82,7 +82,7 @@ class CommandLineTests(ArchesTestCase):
         self.client = Client()
         self.data_type_graphid = "330802c5-95bd-11e8-b7ac-acde48001122"
         self.resource_instance_id = "f562c2fa-48d3-4798-a723-10209806c068"
-        user = User.objects.get(username="ben")
+        user = get_user_model().objects.get(username="ben")
         edit_records = EditLog.objects.filter(resourceinstanceid=self.resource_instance_id).filter(edittype="created")
         if len(edit_records) == 0:
             edit = EditLog(userid=user.id, edittype="create", resourceinstanceid=self.resource_instance_id)
@@ -205,7 +205,7 @@ class CommandLineTests(ArchesTestCase):
         """
         self.client.login(username="ben", password="Test12345!")
         group = Group.objects.get(pk=2)
-        user = User.objects.get(username="ben")
+        user = get_user_model().objects.get(username="ben")
         resource = ResourceInstance.objects.get(resourceinstanceid=self.resource_instance_id)
         view_url = reverse("resource_report", kwargs={"resourceid": self.resource_instance_id})
         edit_url = reverse("resource_editor", kwargs={"resourceid": self.resource_instance_id})

@@ -28,7 +28,6 @@ from arches.app.utils.data_management.resource_graphs.importer import import_gra
 from arches.app.utils.data_management.resources.importer import BusinessDataImporter
 from tests import test_settings
 from django.db import connection
-from django.contrib.auth.models import User
 from django.core import management
 
 # these tests can be run from the command line via
