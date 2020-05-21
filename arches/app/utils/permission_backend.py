@@ -226,7 +226,7 @@ def user_can_edit_graph(user, graphid):
     """
     
     perm_manager = RoleGraphPermissions()
-    return perm_manager.has_role_permissions(user, graphid, "models.write_nodegroup")
+    return perm_manager.has_role_permissions(user, graphid, ["models.write_nodegroup", "models.delete_nodegroup"])
 
 
 def get_resource_types_by_perm(user, perms):
