@@ -17,8 +17,9 @@ class Migration(migrations.Migration):
 
     def add_permissions(apps, schema_editor, with_create_permissions=True):
         db_alias = schema_editor.connection.alias
-        Group = apps.get_model("auth", "Group")
-        Permission = apps.get_model("auth", "Permission")
+        #Group = apps.get_model("auth", "Group")
+        from django.contrib.auth.models import Group, Permission
+        #Permission = apps.get_model("auth", "Permission")
         User = apps.get_model("auth", "User")
 
         resource_reviewer_group = Group.objects.using(db_alias).create(name='Resource Reviewer')
@@ -34,7 +35,8 @@ class Migration(migrations.Migration):
 
     def remove_permissions(apps, schema_editor, with_create_permissions=True):
         db_alias = schema_editor.connection.alias
-        Group = apps.get_model("auth", "Group")
+        #Group = apps.get_model("auth", "Group")
+        from django.contrib.auth.models import Group
         resource_reviewer_group = Group.objects.using(db_alias).get(name='Resource Reviewer')
         User = apps.get_model("auth", "User")
 

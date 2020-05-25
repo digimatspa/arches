@@ -39,9 +39,10 @@ def reverse_func(apps, schema_editor):
 # from https://code.djangoproject.com/ticket/23422#comment:6
 def make_permissions(apps, schema_editor, with_create_permissions=True):
     db_alias = schema_editor.connection.alias
-    Group = apps.get_model("auth", "Group")
+    #Group = apps.get_model("auth", "Group")
+    from django.contrib.auth.models import Group, Permission
     User = get_user_model()
-    Permission = apps.get_model("auth", "Permission")
+    #Permission = apps.get_model("auth", "Permission")
     try:
         read_nodegroup = Permission.objects.using(db_alias).get(
             codename="read_nodegroup", content_type__app_label="models", content_type__model="nodegroup"
@@ -93,7 +94,7 @@ def make_permissions(apps, schema_editor, with_create_permissions=True):
 
 class Migration(migrations.Migration):
 
-    dependencies = []
+    dependencies = [('people', '0025_auto_20170924_0932_squashed_0028_auto_20180606_1543'),]
 
     initial = True
 
