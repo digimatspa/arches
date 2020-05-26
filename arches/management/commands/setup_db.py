@@ -181,11 +181,17 @@ To create it, use:
         conn = conninfo["connection"]
         can_create_db = conninfo["can_create_db"]
 
-        # cursor = conn.cursor()
-        # if can_create_db is True:
-        #     self.drop_and_recreate_db(cursor)
-        # else:
-        #     self.reset_db(cursor)
+        cursor = conn.cursor()
+        if can_create_db is True:
+            self.drop_and_recreate_db(cursor)
+        else:
+            self.reset_db(cursor)
+
+        # Reconnect to database after creation
+        from django.db import connections
+        conn = connections['default']
+        conn.connect()
+
         # delete existing indexes
         management.call_command("es", operation="delete_indexes")
 
