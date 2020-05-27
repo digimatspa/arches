@@ -28,6 +28,7 @@ INSERT INTO d_languages VALUES ('de', 'GERMAN', true);
 INSERT INTO d_languages VALUES ('pt', 'PORTUGUESE', true);
 INSERT INTO d_languages VALUES ('ru', 'RUSSIAN', true);
 INSERT INTO d_languages VALUES ('el', 'GREEK', true);
+INSERT INTO d_languages VALUES ('it', 'ITALIAN', true);
 
 
 --
