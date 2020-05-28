@@ -262,6 +262,8 @@ class Resource(models.ResourceInstance):
         node_datatypes -- a dictionary of datatypes keyed to node ids
 
         """
+        from arches.app.views.resource import get_instance_creator
+        creator = get_instance_creator(self)
 
         document = {}
         document["displaydescription"] = None
@@ -274,6 +276,7 @@ class Resource(models.ResourceInstance):
         document["displayname"] = self.displayname
         document["displaydescription"] = self.displaydescription
         document["map_popup"] = self.map_popup
+        document["creator_id"] = creator['creatorid']
 
         tiles = list(models.TileModel.objects.filter(resourceinstance=self)) if fetchTiles else self.tiles
 

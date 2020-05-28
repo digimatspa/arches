@@ -238,9 +238,9 @@ def append_role_permission_filter_dsl(request, search_results_object):
 
     if request.user.is_superuser is False:
         permitted_areas, permitted_instances = get_role_permissions_for_user(request.user)
-
         matches = []
         must_not = []
+        _filter = []
         # match exactly the combination of permitted area and graph
         # UUID are analyzed (decomposed)
         for permitted_area in permitted_areas:
@@ -330,30 +330,58 @@ def append_role_permission_filter_dsl(request, search_results_object):
                                         "query":  permitted_instance[1]
                                     }
                             }
-                        }]
+                        },
+                        ]
                     }
                 }
                 must_not.append(sub_val)
 
             sub = { "bool": {
                 "must":
-                    [{
+                    [
+                        {
                         "match_phrase": {
                             "related_heritage": {
                                     "query":  permitted_instance[0]
                                 }
                         }
                     },
+
                     {
                         "match_phrase": {
                             "graph_id": {
                                     "query":  permitted_instance[1]
                                 }
                         }
-                    }]
+                    }
+                    ]
                 }
             }
             matches.append(sub)
+
+
+        if request.user.groups.filter(name=settings.EXTERNALS_GROUP).exists(): # controllo se è un esterno
+            sub = {'bool':
+                   {
+                    'should': [
+                                {
+                                "match_phrase": {
+                                                "graph_id": {
+                                                            "query": settings.HERITAGE_GRAPH_ID
+                                                            }
+                                                }
+                                },
+                                {
+                                "match_phrase": {
+                                                "creator_id": {
+                                                              "query": request.user.id
+                                                              }
+                                                }
+                                }
+                               ]
+                   }
+                  }
+            _filter.append(sub)
 
         #no permissions set case
         if len(permitted_areas) == 0 and len(permitted_instances) == 0:
@@ -383,7 +411,7 @@ def append_role_permission_filter_dsl(request, search_results_object):
 		    "minimum_should_match" : 1,
             "must": [],
             "must_not": must_not,
-            "filter": []
+            "filter": _filter,
         }}
 
         search_results_object["query"].add_query(Bool(query))

@@ -39,7 +39,8 @@ class SystemSettings(LazySettings):
 
     SYSTEM_SETTINGS_RESOURCE_MODEL_ID = "ff623370-fa12-11e6-b98b-6c4008b05c4c"
     RESOURCE_INSTANCE_ID = "a106c400-260c-11e7-a604-14109fd34195"
-
+    HERITAGE_GRAPH_ID = "99417385-b8fa-11e6-84a5-026d961c88e6"
+    EXTERNALS_GROUP = "Esterno"
     VALIDATION_TYPES = ["Degrado", "Dissesto", "Vegetazione"]
     SEG_MODEL_ID = "0eb358a6-3172-11ea-8080-080027c5bc64"
     CATEGORY_NAME = "Categoria"
