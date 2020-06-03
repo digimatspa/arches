@@ -46,6 +46,17 @@ define([
                 });
             });
             options.viewModel.createableResources = ko.observableArray(data.createableResources);
+
+
+            data.readableResources.forEach(function(res){
+                var is_createable = false
+                for(var i=0; i<data.createableResources.length && !is_createable;i++){
+                    if(data.createableResources[i].graphid == res.graphid){
+                        is_createable = true;
+                    }
+                }
+                res.is_createable = ko.observable(is_createable);
+            });
             options.viewModel.readableResources = ko.observableArray(data.readableResources);
 
             options.viewModel.setResourceOptionDisable = function(option, item) {

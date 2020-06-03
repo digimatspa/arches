@@ -571,8 +571,19 @@ class RoleGraphPermissions(object):
                     return None
 
                 for perm in perms:
-                    if permission == "models." + perm.PERMISSIONS[perm.permission]:
+                    #if permission == "models." + perm.PERMISSIONS[perm.permission]:
+                    #    return True
+
+                    stored = perm.PERMISSIONS[perm.permission]
+                    if permission == "models." + perm.DELETE and stored == perm.DELETE:
                         return True
+                    elif permission == "models." + perm.WRITE and \
+                            (stored == perm.WRITE or stored == perm.DELETE):
+                        return True
+                    elif permission == "models." + perm.READ and \
+                            (stored == perm.WRITE or stored == perm.DELETE or stored == perm.READ):
+                        return True
+
 
         except Exception as e:
             logger.exception(e)
