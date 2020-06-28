@@ -1,10 +1,11 @@
 define(['arches',
+    'colosseo',
     'models/abstract',
     'knockout',
     'knockout-mapping',
     'underscore',
     'report-templates'
-], function(arches, AbstractModel, ko, koMapping, _, reportLookup) {
+], function(arches, colosseo, AbstractModel, ko, koMapping, _, reportLookup) {
     var ReportModel = AbstractModel.extend({
         /**
          * A backbone model to manage report data
