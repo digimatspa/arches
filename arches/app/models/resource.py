@@ -240,7 +240,7 @@ class Resource(models.ResourceInstance):
                 # find related heritage instance
                 heritageId_res = self.get_node_values(heritage_field_name, provisional=provisional)
                 if len(heritageId_res) > 0:
-                    heritageId = heritageId_res[0]
+                    heritageId = heritageId_res[0]['resourceId']
                     heritage_resource = Resource.objects.get(pk=heritageId)
                     areaId = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
             else:
