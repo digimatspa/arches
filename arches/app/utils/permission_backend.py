@@ -1,4 +1,4 @@
-from arches.app.models.models import Node
+from arches.app.models.models import Node, TileModel
 from arches.app.models.system_settings import settings
 from guardian.backends import check_support
 from guardian.backends import ObjectPermissionBackend
@@ -356,7 +356,7 @@ def check_resource_instance_permissions(user, resourceid, permission):
     return result
 
 
-def user_can_read_resources(user, resourceid=None):
+def user_can_read_resource(user, resourceid=None):
     """
     Requires that a user be able to read an instance and read a single nodegroup of a resource
 
@@ -365,7 +365,7 @@ def user_can_read_resources(user, resourceid=None):
     if user.is_authenticated:
         if user.is_superuser:
             return True
-        if resourceid is not None:
+        if resourceid not in [None, ""]:
             result = check_resource_instance_permissions(user, resourceid, "view_resourceinstance")
             if result is not None:
                 if result["permitted"] == "unknown":
@@ -379,7 +379,7 @@ def user_can_read_resources(user, resourceid=None):
     return False
 
 
-def user_can_edit_resources(user, resourceid=None):
+def user_can_edit_resource(user, resourceid=None):
     """
     Requires that a user be able to edit an instance and delete a single nodegroup of a resource
 
@@ -388,7 +388,7 @@ def user_can_edit_resources(user, resourceid=None):
     if user.is_authenticated:
         if user.is_superuser:
             return True
-        if resourceid is not None:
+        if resourceid not in [None, ""]:
             result = check_resource_instance_permissions(user, resourceid, "change_resourceinstance")
             if result is not None:
                 if result["permitted"] == "unknown":
@@ -404,7 +404,7 @@ def user_can_edit_resources(user, resourceid=None):
     return False
 
 
-def user_can_delete_resources(user, resourceid=None):
+def user_can_delete_resource(user, resourceid=None):
     """
     Requires that a user be permitted to delete an instance
 
@@ -412,11 +412,16 @@ def user_can_delete_resources(user, resourceid=None):
     if user.is_authenticated:
         if user.is_superuser:
             return True
-        if resourceid is not None:
+        if resourceid not in [None, ""]:
             result = check_resource_instance_permissions(user, resourceid, "delete_resourceinstance")
             if result is not None:
                 if result["permitted"] == "unknown":
-                    return user.groups.filter(name__in=settings.RESOURCE_EDITOR_GROUPS).exists() or user_can_edit_model_nodegroups(
+                    nodegroups = get_nodegroups_by_perm(user, "models.delete_nodegroup")
+                    tiles = TileModel.objects.filter(resourceinstance_id=resourceid)
+                    protected_tiles = {str(tile.nodegroup_id) for tile in tiles} - {str(nodegroup.nodegroupid) for nodegroup in nodegroups}
+                    if len(protected_tiles) > 0:
+                        return False
+                    return user.groups.filter(name__in=settings.RESOURCE_EDITOR_GROUPS).exists() or user_can_delete_model_nodegroups(
                         user, result["resource"]
                     )
                 else:
