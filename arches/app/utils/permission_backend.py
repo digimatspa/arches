@@ -453,8 +453,16 @@ def user_is_resource_reviewer(user):
 def get_role_permissions_for_resource(user, resource):
     from arches.app.models.models import AuthRole
     from arches.app.models.resource import Resource
-
     results = set()
+    # check if the user is an external for all the resources except heritage
+    if str(resource.graph_id) != settings.HERITAGE_GRAPH_ID and user.groups.filter(name=settings.EXTERNALS_GROUP).exists():
+        from arches.app.views.resource import get_instance_creator
+        creator = get_instance_creator(resource)
+        # each external user can only see his own resouce instances
+        if creator['creatorid'] != str(user.id):
+            results.add('no_access_to_resourceinstance')
+            return list(results)
+
     try:
         # two types of resource objects are handled Resource and ResourceInstance
         if getattr(resource, 'get_node_values', None) is None:
