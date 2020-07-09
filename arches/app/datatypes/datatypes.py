@@ -18,7 +18,7 @@ from arches.app.utils.permission_backend import user_is_resource_reviewer
 from arches.app.utils.geo_utils import GeoUtils
 import arches.app.utils.task_management as task_management
 from arches.app.search.elasticsearch_dsl_builder import Bool, Match, Range, Term, Terms, Exists, RangeDSLException
-from arches.app.search.search_engine_factory import SearchEngineFactory
+from arches.app.search.search_engine_factory import SearchEngineInstance as se
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.utils.translation import ugettext as _
@@ -524,11 +524,6 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
             if len(tile.data[nodeid]["features"]) == 0:
                 tile.data[nodeid] = None
 
-    def process_api_data(self, value):
-        # TODO check for json format (geojson or esri-json) ... if value['format'] == 'esri-geom':
-        data = GeoUtils().arcgisjson_to_geojson(value)
-        return data
-
     def transform_value_for_tile(self, value, **kwargs):
         if "format" in kwargs and kwargs["format"] == "esrijson":
             arches_geojson = GeoUtils().arcgisjson_to_geojson(value)
@@ -562,8 +557,10 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
         return GeometryCollection(wkt_geoms)
 
     def update(self, tile, data, nodeid=None, action=None):
-        updated_data = tile.data[nodeid]["features"] + data["features"]
-        return udpated_data
+        new_features_array = tile.data[nodeid]["features"] + data["features"]
+        tile.data[nodeid]["features"] = new_features_array
+        updated_data = tile.data[nodeid]
+        return updated_data
 
     def append_to_document(self, document, nodevalue, nodeid, tile, provisional=False):
         document["geometries"].append({"geom": nodevalue, "nodegroup_id": tile.nodegroup_id, "provisional": provisional, "tileid": tile.pk})
@@ -1148,7 +1145,6 @@ class FileListDataType(BaseDataType):
                 for file_json in current_tile_data[str(node.pk)]:
                     if file_json["name"] == file_data.name and file_json["url"] is None:
                         file_json["file_id"] = str(file_model.pk)
-                        file_json["url"] = str(file_model.path.url)
                         file_json["url"] = "/files/" + str(file_model.fileid)
                         file_json["status"] = "uploaded"
                         resave_tile = True
@@ -1612,9 +1608,10 @@ class ResourceInstanceDataType(BaseDataType):
                         resourceXresourceId = resourceXresource
                     else:
                         resourceXresourceId = resourceXresource["resourceXresourceId"]
+                    if not resourceXresourceId:
+                        continue
                     rr = models.ResourceXResource.objects.get(pk=resourceXresourceId)
                     resourceid = str(rr.resourceinstanceidto_id)
-                    se = SearchEngineFactory().create()
                     resource_document = se.search(index="resources", id=resourceid)
                     ret.append(
                         {
@@ -1723,17 +1720,10 @@ class ResourceInstanceDataType(BaseDataType):
                     )
 
     def transform_value_for_tile(self, value, **kwargs):
-        return [v.strip() for v in value.split(",")]
+        return json.loads(value)
 
     def transform_export_values(self, value, *args, **kwargs):
-        result = value
-        try:
-            if not isinstance(value, str):  # changed from basestring to str for python3 branch
-                result = ",".join(value)
-        except Exception:
-            pass
-
-        return result
+        return json.dumps(value)
 
     def append_search_filters(self, value, node, query, request):
         try:
@@ -1827,14 +1817,6 @@ class ResourceInstanceListDataType(ResourceInstanceDataType):
         m = super(ResourceInstanceListDataType, self).from_rdf(json_ld_node)
         if m is not None:
             return [m]
-
-    def process_api_data(self, value):
-        try:
-            value.upper()
-            data = json.loads(value)
-        except Exception:
-            data = value
-        return data
 
     def collects_multiple_values(self):
         return True

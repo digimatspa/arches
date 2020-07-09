@@ -101,6 +101,7 @@ class GraphSettingsView(GraphBaseView):
                 "isactive",
                 "color",
                 "jsonldcontext",
+                "slug",
                 "config",
                 "template_id",
             ]:
@@ -368,6 +369,7 @@ class GraphDataView(View):
                 elif self.action == "clone_graph":
                     clone_data = graph.copy()
                     ret = clone_data["copy"]
+                    ret.slug = None
                     ret.save()
                     ret.copy_functions(graph, [clone_data["nodes"], clone_data["nodegroups"]])
 
