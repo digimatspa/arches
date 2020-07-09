@@ -1621,7 +1621,7 @@ class ResourceInstanceDataType(BaseDataType):
                             "inverseOntologyProperty": rr.inverserelationshiptype,
                         }
                     )
-                except NotFoundError as e:
+                except Exception as e:
                     logger.info(
                         f"Resource {resourceid} not available. This message may appear during resource load, \
                             in which case the problem will be resolved once the related resource is loaded"

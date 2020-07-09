@@ -149,25 +149,29 @@ class ArchesFileReader(Reader):
                             reporter.update_tiles(len(resource["tiles"]))
 
                             def update_or_create_tile(src_tile):
-                                src_tile["parenttile_id"] = uuid.UUID(str(src_tile["parenttile_id"])) if src_tile["parenttile_id"] else None
-
-                                tile, created = Tile.objects.update_or_create(
-                                    tileid=uuid.UUID(str(src_tile["tileid"])),
-                                    defaults={
-                                        "resourceinstance": resourceinstance,
-                                        "parenttile_id": str(src_tile["parenttile_id"]) if src_tile["parenttile_id"] else None,
-                                        "nodegroup_id": str(src_tile["nodegroup_id"]) if src_tile["nodegroup_id"] else None,
-                                        "data": src_tile["data"],
-                                    },
-                                )
                                 try:
-                                    if len(Tile.objects.filter(tileid=tile.tileid)) == 1:
-                                        errors = tile.validate(self.errors)
-                                        reporter.update_tiles_saved()
-                                except TileValidationError as e:
-                                    print(e)
-                                for child in src_tile["tiles"]:
-                                    update_or_create_tile(child)
+                                    src_tile["parenttile_id"] = uuid.UUID(str(src_tile["parenttile_id"])) if src_tile["parenttile_id"] else None
+
+                                    tile, created = Tile.objects.update_or_create(
+                                        tileid=uuid.UUID(str(src_tile["tileid"])),
+                                        defaults={
+                                            "resourceinstance": resourceinstance,
+                                            "parenttile_id": str(src_tile["parenttile_id"]) if src_tile["parenttile_id"] else None,
+                                            "nodegroup_id": str(src_tile["nodegroup_id"]) if src_tile["nodegroup_id"] else None,
+                                            "data": src_tile["data"],
+                                        },
+                                    )
+                                    try:
+                                        if len(Tile.objects.filter(tileid=tile.tileid)) == 1:
+                                            errors = tile.validate(self.errors)
+                                            reporter.update_tiles_saved()
+                                    except TileValidationError as e:
+                                        print(e)
+                                    for child in src_tile["tiles"]:
+                                        update_or_create_tile(child)
+                                except Exception as e:
+                                    import traceback
+                                    traceback.print_exc()
 
                             for tile in resource["tiles"]:
                                 tile["tiles"] = [child for child in resource["tiles"] if child["parenttile_id"] == tile["tileid"]]
