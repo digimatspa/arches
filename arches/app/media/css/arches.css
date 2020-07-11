@@ -11902,7 +11902,28 @@ ul.select2-choices:after {
     overflow-x: auto;
     overflow-y: hidden;
     z-index: 3;
+    flex: 0 0 auto;
 }
+
+.panel-container {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid silver;
+  overflow: hidden;
+  
+  /* avoid browser level touch actions */
+  xtouch-action: none;
+  min-height: 100%;
+}
+
+.splitter {
+  flex: 0 0 auto;
+  width: 14px;  
+  background: url(../img/vsizegrip.png) center center no-repeat #dedede;
+  min-height: 200px;
+  cursor: col-resize;  
+}
+
 
 .left-panel-overflow {
     height: calc(100vh - 225px);

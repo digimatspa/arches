@@ -46,6 +46,8 @@ from arches.app.utils.permission_backend import user_is_resource_reviewer, get_u
 from arches.app.datatypes.datatypes import DataTypeFactory
 from django.contrib.auth import get_user_model
 
+from arches.app.models.concept import Concept
+
 logger = logging.getLogger(__name__)
 
 
@@ -232,9 +234,9 @@ class Resource(models.ResourceInstance):
 
         try:
             # TODO: spostare
-            heritage_graph_id = '99417385-b8fa-11e6-84a5-026d961c88e6'
-            heritage_field_name = 'Bene archeologico'
-            area_field_name = 'Area archeologica'
+            heritage_graph_id = settings.HERITAGE_GRAPH_ID #'99417385-b8fa-11e6-84a5-026d961c88e6'
+            heritage_field_name = settings.HERITAGE_FIELD_NAME #'Bene archeologico'
+            area_field_name = settings.AREA_FIELD_NAME #'Area archeologica'
 
             if str(self.graph.graphid) != heritage_graph_id:
                 # find related heritage instance
@@ -246,6 +248,13 @@ class Resource(models.ResourceInstance):
             else:
                 heritageId = str(self.resourceinstanceid)
                 areaId = self.get_node_values(area_field_name, False, provisional)[0]
+            area_value = models.Value.objects.get(pk=areaId)
+            concept: Concept = Concept().get(id=area_value.concept_id,include_parentconcepts=True, include_subconcepts=True)
+            if len(concept.subconcepts) == 0 and len(concept.parentconcepts) > 0:
+                concept_areaId = concept.parentconcepts[0].id
+                area = models.Value.objects.filter(concept__conceptid=concept_areaId).exclude(value__contains='http://').exclude(value__contains='https://')[0]
+                areaId = str(area.valueid)
+
         except Exception as e:
             logger.exception(e)
 

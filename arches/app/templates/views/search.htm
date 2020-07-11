@@ -24,6 +24,47 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
 {% block main_content %}
+    <style>
+        @media screen and (max-width: 1069px) {
+            .search-type-btn{
+                min-width: 90px;
+            }
+        }
+        
+        @media screen and (max-width: 770px) {
+            .content-panel {
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+                height: 100%;
+            }
+            
+            .search-results-panel{
+                max-width:100%;
+                min-width:100%;
+            }
+            
+            .search-listing{
+                width: 100%;
+            }
+            
+            .search-control-container {
+                -ms-flex: 0 0 900px;
+                -webkit-flex: 0 0 900px;
+                flex: 1 0 900px;
+                overflow:hidden;
+            }
+            
+            .search-type-btn{
+                min-width: 90px;
+            }
+            
+            .card-form-preview-container {
+                margin-top: 0px !important;
+            }
+        }
+    </style>
+    
     <div class="content-panel flexrow" data-bind="click:function() { menuActive(false); }, visible: true", style="display:none;">
 
         <div class="flex search-results-panel">
@@ -108,7 +149,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
                 <!-- Card Container -->
-                <div class="card-form-preview-container relative">
+                <div class="card-form-preview-container relative" style="margin-top:50px;">
                     <div class="tab-content relative" data-bind="foreach: {data: sharedStateObject.filtersList, as: 'filter'}">
                         <!-- ko if: filter.type === 'filter' && filter.enabled -->
                         <div class="tab-pane" data-bind="css: {'active': $parent.sharedStateObject.selectedTab() === filter.componentname}">
