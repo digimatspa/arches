@@ -43,6 +43,16 @@ define([
                 });
             });
 
+            // Add geolocate control to the map.
+            map.addControl(
+                new mapboxgl.GeolocateControl({
+                    positionOptions: {
+                        enableHighAccuracy: true
+                    },
+                    trackUserLocation: true
+                })
+            );
+
             // prevents drag events from bubbling
             $(element).mousedown(function(event) {
                 event.stopPropagation();

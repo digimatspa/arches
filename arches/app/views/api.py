@@ -458,6 +458,112 @@ class MVT(APIBase):
         return HttpResponse(tile, content_type="application/x-protobuf")
 
 
+class MVTS(APIBase):
+    EARTHCIRCUM = 40075016.6856
+    PIXELSPERTILE = 256
+
+    def get(self, request, zoom, x, y):
+        nodeid = 'e81113f2-69f0-11ea-be74-005056868262'
+        if hasattr(request.user, "userprofile") is not True:
+            models.UserProfile.objects.create(user=request.user)
+        viewable_nodegroups = request.user.userprofile.viewable_nodegroups
+        resource_ids = get_restricted_instances(request.user)
+        if len(resource_ids) == 0:
+            resource_ids.append("10000000-0000-0000-0000-000000000001")  # This must have a uuid that will never be a resource id.
+        resource_ids = tuple(resource_ids)
+        try:
+            node = models.Node.objects.get(nodeid=nodeid, nodegroup_id__in=viewable_nodegroups)
+        except models.Node.DoesNotExist:
+            raise Http404()
+        config = node.config
+        cache_key = f"mvts_{nodeid}_{zoom}_{x}_{y}"
+        tile = cache.get(cache_key)
+        if tile is None:
+            with connection.cursor() as cursor:
+                # TODO: when we upgrade to PostGIS 3, we can get feature state
+                # working by adding the feature_id_name arg:
+                # https://github.com/postgis/postgis/pull/303
+                if int(zoom) <= int(config["clusterMaxZoom"]):
+                    arc = self.EARTHCIRCUM / ((1 << int(zoom)) * self.PIXELSPERTILE)
+                    distance = arc * int(config["clusterDistance"])
+                    min_points = int(config["clusterMinPoints"])
+                    cursor.execute(
+                        """WITH clusters(tileid, resourceinstanceid, nodeid, geom, tipo_segnalazione, cid)
+                        AS (
+                            SELECT m.*,
+                            ST_ClusterDBSCAN(geom, eps := %s, minpoints := %s) over () AS cid
+                            FROM (
+                                SELECT tileid,
+                                    resourceinstanceid,
+                                    nodeid,
+                                    geom,
+                                    tipo_segnalazione
+                                FROM mv_segnalazioni_geoms
+                                WHERE nodeid = %s and resourceinstanceid not in %s
+                            ) m
+                        )
+
+                        SELECT ST_AsMVT(
+                            tile,
+                             %s,
+                            4096,
+                            'geom',
+                            'id'
+                        ) FROM (
+                            SELECT resourceinstanceid::text,
+                                row_number() over () as id,
+                                1 as total,
+                                ST_AsMVTGeom(
+                                    geom,
+                                    TileBBox(%s, %s, %s, 3857)
+                                ) AS geom,
+                                '' AS extent,
+                                tipo_segnalazione::text
+                            FROM clusters
+                            WHERE cid is NULL
+                            UNION
+                            SELECT NULL as resourceinstanceid,
+                                row_number() over () as id,
+                                count(*) as total,
+                                ST_AsMVTGeom(
+                                    ST_Centroid(
+                                        ST_Collect(geom)
+                                    ),
+                                    TileBBox(%s, %s, %s, 3857)
+                                ) AS geom,
+                                ST_AsGeoJSON(
+                                    ST_Extent(geom)
+                                ) AS extent,
+                                NULL as tipo_segnalazione
+                            FROM clusters
+                            WHERE cid IS NOT NULL
+                            GROUP BY cid
+                        ) as tile;""",
+                        [distance, min_points, nodeid, resource_ids, nodeid, zoom, x, y, zoom, x, y],
+                    )
+                else:
+                    cursor.execute(
+                        """SELECT ST_AsMVT(tile, %s, 4096, 'geom', 'id') FROM (SELECT tileid,
+                            row_number() over () as id,
+                            resourceinstanceid,
+                            nodeid,
+                            ST_AsMVTGeom(
+                                geom,
+                                TileBBox(%s, %s, %s, 3857)
+                            ) AS geom,
+                            1 AS total,
+                            tipo_segnalazione
+                        FROM mv_segnalazioni_geoms
+                        WHERE nodeid = %s and resourceinstanceid not in %s) AS tile;""",
+                        [nodeid, zoom, x, y, nodeid, resource_ids],
+                    )
+                tile = bytes(cursor.fetchone()[0])
+                cache.set(cache_key, tile, settings.TILE_CACHE_TIMEOUT)
+        if not len(tile):
+            raise Http404()
+        return HttpResponse(tile, content_type="application/x-protobuf")
+
+
 @method_decorator(csrf_exempt, name="dispatch")
 class Graphs(APIBase):
     def get(self, request, graph_id=None):

@@ -470,7 +470,7 @@ def get_role_permissions_for_resource(user, resource):
 
         heritageId, areaId = resource.resolve_resource_area()
 
-        if heritageId is not None and areaId is not None:
+        if areaId is not None:
             graphid = resource.graph_id
 
             #raw query must be executed in order to join tables referring to a common
@@ -478,8 +478,10 @@ def get_role_permissions_for_resource(user, resource):
             query = 'select ar.auth_role_id, ar.permission, ar.auth_group_id, ar.graph_id '\
                     'from models_authrole ar join models_arearole ro '\
                     'on ar.auth_group_id = ro.auth_group_id where ' \
-                    'ar.graph_id = UUID(\'' + str(graphid) + '\') and ro.user_id = ' + str(user.id) + ' ' \
-                    'and (ro.resource_instance_id = UUID(\'' + heritageId + '\') or ro.area_id=UUID(\'' + areaId + '\'))'
+                    'ar.graph_id = UUID(\'' + str(graphid) + '\') and ro.user_id = ' + str(user.id) + ' and ('
+            if heritageId is not None:
+                query = query + 'ro.resource_instance_id = UUID(\'' + heritageId + '\') or '
+            query = query + 'ro.area_id=UUID(\'' + areaId + '\'))'
 
             perms = AuthRole.objects.raw(query)
 

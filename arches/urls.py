@@ -242,6 +242,11 @@ urlpatterns = [
         api.MVT.as_view(),
         name="mvt",
     ),
+    url(
+        r"^mvts/(?P<zoom>[0-9]+|\{z\})/(?P<x>[0-9]+|\{x\})/(?P<y>[0-9]+|\{y\}).pbf$",
+        api.MVTS.as_view(),
+        name="mvts",
+    ),
     url(r"^images$", api.Images.as_view(), name="images"),
     url(r"^ontology_properties$", api.OntolgyPropery.as_view(), name="ontology_properties"),
     url(r"^tileserver/(?P<path>.*)$", TileserverProxyView.as_view()),

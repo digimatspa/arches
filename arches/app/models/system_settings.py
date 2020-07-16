@@ -46,6 +46,8 @@ class SystemSettings(LazySettings):
     CATEGORY_NAME = "Categoria"
     SEG_TYPE_NAME = "Tipo segnalazione"
     SEG_TYPE_ALERT = "Urgente"
+    HERITAGE_FIELD_NAME = "Bene archeologico"
+    AREA_FIELD_NAME = "Area archeologica"
 
 
     def __init__(self, *args, **kwargs):

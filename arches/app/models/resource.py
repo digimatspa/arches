@@ -233,7 +233,6 @@ class Resource(models.ResourceInstance):
         areaId = None
 
         try:
-            # TODO: spostare
             heritage_graph_id = settings.HERITAGE_GRAPH_ID #'99417385-b8fa-11e6-84a5-026d961c88e6'
             heritage_field_name = settings.HERITAGE_FIELD_NAME #'Bene archeologico'
             area_field_name = settings.AREA_FIELD_NAME #'Area archeologica'
@@ -241,19 +240,26 @@ class Resource(models.ResourceInstance):
             if str(self.graph.graphid) != heritage_graph_id:
                 # find related heritage instance
                 heritageId_res = self.get_node_values(heritage_field_name, provisional=provisional)
-                if len(heritageId_res) > 0:
+                if len(heritageId_res) > 0 and heritageId_res[0] is not None:
                     heritageId = heritageId_res[0]['resourceId']
                     heritage_resource = Resource.objects.get(pk=heritageId)
                     areaId = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
+                else:
+                    # try to retrieve area (if the heritage instance is not defined)
+                    area_nodes = self.get_node_values(area_field_name, False, provisional, False)
+                    if len(area_nodes)>0:
+                        areaId = area_nodes[0]
             else:
                 heritageId = str(self.resourceinstanceid)
                 areaId = self.get_node_values(area_field_name, False, provisional)[0]
-            area_value = models.Value.objects.get(pk=areaId)
-            concept: Concept = Concept().get(id=area_value.concept_id,include_parentconcepts=True, include_subconcepts=True)
-            if len(concept.subconcepts) == 0 and len(concept.parentconcepts) > 0:
-                concept_areaId = concept.parentconcepts[0].id
-                area = models.Value.objects.filter(concept__conceptid=concept_areaId).exclude(value__contains='http://').exclude(value__contains='https://')[0]
-                areaId = str(area.valueid)
+
+            if areaId is not None:
+                area_value = models.Value.objects.get(pk=areaId)
+                concept: Concept = Concept().get(id=area_value.concept_id,include_parentconcepts=True, include_subconcepts=True)
+                if len(concept.subconcepts) == 0 and len(concept.parentconcepts) > 0:
+                    concept_areaId = concept.parentconcepts[0].id
+                    area = models.Value.objects.filter(concept__conceptid=concept_areaId).exclude(value__contains='http://').exclude(value__contains='https://')[0]
+                    areaId = str(area.valueid)
 
         except Exception as e:
             logger.exception(e)
@@ -311,8 +317,7 @@ class Resource(models.ResourceInstance):
             document["related_heritage_area"] = areaId
 
         try:
-            # TODO spostare
-            document["validation_type"] = self.get_node_values("Categoria", provisional=True)
+            document["validation_type"] = self.get_node_values(SystemSettings.CATEGORY_NAME, provisional=True)
         except Exception:
             document["validation_type"] = None
 
@@ -534,25 +539,32 @@ class Resource(models.ResourceInstance):
 
         return JSONSerializer().serializeToPython(ret)
 
-    def get_node_values(self, node_name, parse=True, provisional=False):
+    def get_node_values(self, node_name, parse=True, provisional=False, raise_exc=True):
         """
         Take a node_name (string) as an argument and return a list of values.
         If an invalid node_name is used, or if multiple nodes with the same
         name are found, the method returns False.
         Current supported (tested) node types are: string, date, concept, geometry
         """
+        values = []
 
         nodes = models.Node.objects.filter(name=node_name, graph_id=self.graph_id)
 
         if len(nodes) > 1:
-            raise MultipleNodesFoundException(node_name, nodes)
+            if raise_exc:
+                raise MultipleNodesFoundException(node_name, nodes)
+            else:
+                return values
 
         if len(nodes) == 0:
-            raise InvalidNodeNameException(node_name)
+            if raise_exc:
+                raise InvalidNodeNameException(node_name)
+            else:
+                return values
+
 
         tiles = self.tilemodel_set.filter(nodegroup_id=nodes[0].nodegroup_id)
-
-        values = []
+        
         for tile in tiles:
             for node_id, value in tile.data.items():
                 if node_id == str(nodes[0].nodeid):
