@@ -148,33 +148,55 @@ define(['arches',
                             node_name: 'Immagine di anteprima'
                         },
                         success: function(response){
-
+                            
                             if (response.length > 0){
-                                resource.thumbnail_url = response[0].url;
+                                if ( response[0] !== null) {
+                                    resource.thumbnail_url = response[0].url;
+                                }
+                                else {
+                                    resource.thumbnail_url = null;
+                                }
                             }
-
                             _.each(resource.relationships, function (relationship) {
-                                res.related.push({
+                                var new_relationship = {
                                     'displayname': resource.displayname,
                                     'link': arches.urls.resource_report + resource.instance_id,
                                     'relationship': relationship,
                                     'resourceid': resource.instance_id,
                                     'thumbnail_url': resource.thumbnail_url
-                                });
+                                };
+
+                                if (res.related.length > 0){
+                                    for ( var item in res.related){
+                                        if (res.related[item].resourceid !== resource.instance_id) {
+                                            res.related.push(new_relationship);
+                                        }
+                                    }
+                                }
+                            else {
+                                    res.related.push(new_relationship);
+                                }
                             });
                         },
                         error: function(response){
-                            console.log(response);
-
-
                             _.each(resource.relationships, function (relationship) {
-                                res.related.push({
+                                var new_relationship = {
                                     'displayname': resource.displayname,
                                     'link': arches.urls.resource_report + resource.instance_id,
                                     'relationship': relationship,
                                     'resourceid': resource.instance_id,
                                     'thumbnail_url': null
-                                });
+                                };
+                                if (res.related.length > 0){
+                                    for ( var item in res.related){
+                                        if (res.related[item].resourceid !== resource.instance_id) {
+                                            res.related.push(new_relationship);
+                                        }
+                                    }
+                                }
+                            else {
+                                    res.related.push(new_relationship);
+                                }
                             });
                         }
                     });
