@@ -32,6 +32,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import View
+from arches import __version__
 from arches.app.models import models
 from arches.app.models.card import Card
 from arches.app.models.graph import Graph
@@ -702,13 +703,21 @@ class ResourceReportView(MapBaseManagerView):
                 if rr["graph_id"] == summary["graphid"]:
                     relationship_summary = []
                     for relationship in relationships:
-                        if rr["resourceinstanceid"] in (relationship["resourceinstanceidto"], relationship["resourceinstanceidfrom"]):
+                        if rr["resourceinstanceid"] == relationship["resourceinstanceidto"]:
                             rr_type = (
                                 resource_relationship_type_values[relationship["relationshiptype"]]
                                 if relationship["relationshiptype"] in resource_relationship_type_values
                                 else relationship["relationshiptype"]
                             )
                             relationship_summary.append(rr_type)
+                        elif rr["resourceinstanceid"] == relationship["resourceinstanceidfrom"]:
+                            rr_type = (
+                                resource_relationship_type_values[relationship["inverserelationshiptype"]]
+                                if relationship["inverserelationshiptype"] in resource_relationship_type_values
+                                else relationship["inverserelationshiptype"]
+                            )
+                            relationship_summary.append(rr_type)
+
                     summary["resources"].append(
                         {"instance_id": rr["resourceinstanceid"], "displayname": rr["displayname"], "relationships": relationship_summary}
                     )
@@ -812,6 +821,7 @@ class ResourceReportView(MapBaseManagerView):
             ),
             resourceid=resourceid,
             displayname=displayname,
+            version=__version__,
         )
 
         if graph.iconclass:

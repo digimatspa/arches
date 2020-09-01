@@ -120,7 +120,6 @@ define([
             };
     
             self.value.subscribe(updateNameAndOntologyClass);
-            
             // Resolve Resource Instance Names from the incoming values
             updateNameAndOntologyClass(self.value);
 
@@ -136,8 +135,9 @@ define([
             var relatedResourceModels = ko.computed(function() {
                 var res = [];
                 var graphlist = this.preview ? arches.graphs : arches.resources;
+
                 if (params.node && params.state !== 'report') {
-                    res = params.node.config.graphs().map(function(item){
+                    res = ko.unwrap(params.node.config.graphs).map(function(item){
                         var graph = graphlist.find(function(graph){
                             return graph.graphid === item.graphid;
                         });
@@ -147,6 +147,7 @@ define([
                         }
                     });
                 }
+                
                 return res;
             }, this);
 
@@ -160,10 +161,12 @@ define([
 
         var makeObject = function(id, esSource){
             var graph = self.lookupGraph(esSource.graph_id);
+            var ontologyProperty = graph ? graph.config.ontologyProperty : '';
+            var inverseOntologyProperty = graph ? graph.config.inverseOntologyProperty : '';
             var ret = {
                 "resourceId": ko.observable(id),
-                "ontologyProperty": ko.observable(graph.config.ontologyProperty || ''),
-                "inverseOntologyProperty": ko.observable(graph.config.inverseOntologyProperty || ''),
+                "ontologyProperty": ko.observable(ontologyProperty || ''),
+                "inverseOntologyProperty": ko.observable(inverseOntologyProperty || ''),
                 "resourceXresourceId": ""
             };            
             Object.defineProperty(ret, 'resourceName', {value: ko.observable(esSource.displayname)});
