@@ -250,10 +250,8 @@ def append_role_permission_filter_dsl(request, search_results_object):
                 sub_val = { "bool": {
                     "must":
                         [{
-                            "match_phrase": {
-                                "related_heritage_area": {
-                                        "query":  permitted_area[0]
-                                    }
+                            "term": {
+                                "related_heritage_area": "".join(permitted_area[0].split("-")) # Elimino i trattini "-"
                             }
                         },
                         {
@@ -284,10 +282,8 @@ def append_role_permission_filter_dsl(request, search_results_object):
             sub = { "bool": {
                 "must":
                     [{
-                        "match_phrase": {
-                            "related_heritage_area": {
-                                    "query":  permitted_area[0]
-                                }
+                        "term": {
+                            "related_heritage_area": "".join(permitted_area[0].split("-")) # Elimino i trattini "-"
                         }
                     },
                     {
@@ -296,7 +292,8 @@ def append_role_permission_filter_dsl(request, search_results_object):
                                     "query":  permitted_area[1]
                                 }
                         }
-                    }]
+                    }
+                    ]
                 }
             }
             matches.append(sub)
@@ -306,10 +303,8 @@ def append_role_permission_filter_dsl(request, search_results_object):
                 sub_val = { "bool": {
                     "must":
                         [{
-                            "match_phrase": {
-                                "related_heritage": {
-                                        "query":  permitted_instance[0]
-                                    }
+                            "term": {
+                                "related_heritage": "".join(permitted_instance[0].split("-")) # Elimino i trattini "-"
                             }
                         },
                         {
@@ -342,10 +337,8 @@ def append_role_permission_filter_dsl(request, search_results_object):
                 "must":
                     [
                         {
-                        "match_phrase": {
-                            "related_heritage": {
-                                    "query":  permitted_instance[0]
-                                }
+                        "term": {
+                            "related_heritage": "".join(permitted_instance[0].split("-")) # Elimino i trattini "-"
                         }
                     },
 
@@ -392,9 +385,7 @@ def append_role_permission_filter_dsl(request, search_results_object):
                 "must":
                     [{
                         "match_phrase": {
-                            "related_heritage": {
-                                    "query":  "no-access"
-                                }
+                            "related_heritage": "no-access"
                         }
                     },
                     {

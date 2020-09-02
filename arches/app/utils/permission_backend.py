@@ -490,46 +490,51 @@ def get_role_permissions_for_resource(user, resource):
         if getattr(resource, 'get_node_values', None) is None:
             resource = Resource.objects.get(pk=resource.resourceinstanceid)
 
-        heritageId, areaId = resource.resolve_resource_area()
+        # heritageId, areaId = resource.resolve_resource_area()
+        area_heritages = resource.resolve_resource_area()
 
-        if areaId is not None:
-            graphid = resource.graph_id
+        for area_heritage in area_heritages:
+            areaId = area_heritage[1]
+            heritageId = area_heritage[0]
 
-            #raw query must be executed in order to join tables referring to a common
-            #external table (auth_group)
-            query = 'select ar.auth_role_id, ar.permission, ar.auth_group_id, ar.graph_id '\
-                    'from models_authrole ar join models_arearole ro '\
-                    'on ar.auth_group_id = ro.auth_group_id where ' \
-                    'ar.graph_id = UUID(\'' + str(graphid) + '\') and ro.user_id = ' + str(user.id) + ' and ('
-            if heritageId is not None:
-                query = query + 'ro.resource_instance_id = UUID(\'' + heritageId + '\') or '
-            query = query + 'ro.area_id=UUID(\'' + areaId + '\'))'
+            if areaId is not None:
+                graphid = resource.graph_id
 
-            perms = AuthRole.objects.raw(query)
+                #raw query must be executed in order to join tables referring to a common
+                #external table (auth_group)
+                query = 'select ar.auth_role_id, ar.permission, ar.auth_group_id, ar.graph_id '\
+                        'from models_authrole ar join models_arearole ro '\
+                        'on ar.auth_group_id = ro.auth_group_id where ' \
+                        'ar.graph_id = UUID(\'' + str(graphid) + '\') and ro.user_id = ' + str(user.id) + ' and ('
+                if heritageId is not None:
+                    query = query + 'ro.resource_instance_id = UUID(\'' + heritageId + '\') or '
+                query = query + 'ro.area_id=UUID(\'' + areaId + '\'))'
 
-            # no access without permissions
-            if len(perms) == 0:
-                results.add('no_access_to_resourceinstance')
+                perms = AuthRole.objects.raw(query)
 
-            #a user can have multiple roles on the same area or heritage resource
-            #remove the "no access" permission if another permission is available
+                # no access without permissions
+                if len(perms) == 0:
+                    results.add('no_access_to_resourceinstance')
 
-            has_no_access = False
-            for perm in perms:
-                if perm.WRITE_ == perm.permission:
-                    results.add('change_resourceinstance')
-                    results.add('view_resourceinstance')
-                elif perm.READ_ == perm.permission:
-                    results.add('view_resourceinstance')
-                elif perm.NO_ACCESS_ == perm.permission:
-                    has_no_access = True
-                elif perm.DELETE_ == perm.permission:
-                    results.add('delete_resourceinstance')
-                    results.add('change_resourceinstance')
-                    results.add('view_resourceinstance')
+                #a user can have multiple roles on the same area or heritage resource
+                #remove the "no access" permission if another permission is available
 
-            if has_no_access and len(results) == 0:
-                results.add('no_access_to_resourceinstance')
+                has_no_access = False
+                for perm in perms:
+                    if perm.WRITE_ == perm.permission:
+                        results.add('change_resourceinstance')
+                        results.add('view_resourceinstance')
+                    elif perm.READ_ == perm.permission:
+                        results.add('view_resourceinstance')
+                    elif perm.NO_ACCESS_ == perm.permission:
+                        has_no_access = True
+                    elif perm.DELETE_ == perm.permission:
+                        results.add('delete_resourceinstance')
+                        results.add('change_resourceinstance')
+                        results.add('view_resourceinstance')
+
+                if has_no_access and len(results) == 0:
+                    results.add('no_access_to_resourceinstance')
 
     except Exception as e:
         logger.exception(e)

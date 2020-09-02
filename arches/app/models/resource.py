@@ -69,6 +69,7 @@ class Resource(models.ResourceInstance):
         # self.resourceinstancesecurity
         # end from models.ResourceInstance
         self.tiles = []
+        self.related_resource_names = ['Segnalazione', 'Cantiere', 'Piano manutenzione']
 
     def get_descriptor(self, descriptor):
         module = importlib.import_module("arches.app.functions.primary_descriptors")
@@ -232,43 +233,82 @@ class Resource(models.ResourceInstance):
                 document, doc_id = es_index.get_documents_to_index(self, document["tiles"])
                 es_index.index_document(document=document, id=doc_id)
 
-    def resolve_resource_area(self, provisional=False):
-        heritageId = None
-        areaId = None
+    def resolve_resource_area(self, provisional=False,related_resource_names=None):
+        if not related_resource_names:
+            related_resource_names = self.related_resource_names
+        area_heritages = []
+        heritageIds = None
+        areaIds = None
 
         try:
             heritage_graph_id = settings.HERITAGE_GRAPH_ID #'99417385-b8fa-11e6-84a5-026d961c88e6'
             heritage_field_name = settings.HERITAGE_FIELD_NAME #'Bene archeologico'
             area_field_name = settings.AREA_FIELD_NAME #'Area archeologica'
+            
 
             if str(self.graph.graphid) != heritage_graph_id:
-                # find related heritage instance
-                heritageId_res = self.get_node_values(heritage_field_name, provisional=provisional)
-                if len(heritageId_res) > 0 and heritageId_res[0] is not None:
-                    heritageId = heritageId_res[0]['resourceId']
-                    heritage_resource = Resource.objects.get(pk=heritageId)
-                    areaId = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
+                # find related heritage instances
+                try:
+                    heritageIds_res = self.get_node_values(heritage_field_name, provisional=provisional)
+                except InvalidNodeNameException as e:
+                    logger.debug("No nodes found with name: ", heritage_field_name)
+                     # Try to find related 
+                    related_resource_names_ = related_resource_names.copy()
+                    for node_name in related_resource_names:
+                        related_resource_names_.remove(node_name)
+                        try:
+                            resource_ids = self.get_node_values(node_name, provisional=False)
+                            if len(resource_ids)> 0:
+                                for resource_id in resource_ids:
+                                    try:
+                                        resource = Resource.objects.get(pk=resource_id['resourceId'])
+                                        area_heritages.extend(resource.resolve_resource_area(related_resource_names=related_resource_names_))
+                                    except Exception as e:
+                                        logger.info("Not found nodes into resource with id: {}".format(resource_id['resourceId']))
+                        except InvalidNodeNameException as e:
+                            logger.debug("not found nodes with name {} into resource with id: {}".format(node_name, self.displayname))
                 else:
-                    # try to retrieve area (if the heritage instance is not defined)
-                    area_nodes = self.get_node_values(area_field_name, False, provisional, False)
-                    if len(area_nodes)>0:
-                        areaId = area_nodes[0]
+                    if len(heritageIds_res) > 0:
+                        for heritage in heritageIds_res:
+                            area_heritage = []
+                            heritage_id = heritage['resourceId']
+                            area_heritage.append(heritage_id)
+                            heritage_resource = Resource.objects.get(pk=heritage_id)
+                            area_id = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
+                            area_heritage.append(area_id)
+                            area_heritages.append(area_heritage)
+
+                        # heritageId = heritageId_res[0]['resourceId']
+                        # heritage_resource = Resource.objects.get(pk=heritageId)
+                        # areaId = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
+                    else:
+                        # try to retrieve area (if the heritage instance is not defined)
+                        # Need to adjust if multiple areas proposed
+
+                        area_nodes = self.get_node_values(area_field_name, False, provisional, False)
+                        if len(area_nodes)>0:
+                            area_id = area_nodes[0]
+                            area_heritages.append([None, area_id])
             else:
                 heritageId = str(self.resourceinstanceid)
                 areaId = self.get_node_values(area_field_name, False, provisional)[0]
+                area_heritages.append([heritageId, areaId])
 
-            if areaId is not None:
-                area_value = models.Value.objects.get(pk=areaId)
+            for area_heritages_index in range(len(area_heritages)):
+                area_value = models.Value.objects.get(pk=area_heritages[area_heritages_index][1])
                 concept: Concept = Concept().get(id=area_value.concept_id,include_parentconcepts=True, include_subconcepts=True)
                 if len(concept.subconcepts) == 0 and len(concept.parentconcepts) > 0:
                     concept_areaId = concept.parentconcepts[0].id
                     area = models.Value.objects.filter(concept__conceptid=concept_areaId).exclude(value__contains='http://').exclude(value__contains='https://')[0]
-                    areaId = str(area.valueid)
+                    area_heritages[area_heritages_index][1] = str(area.valueid)
 
         except Exception as e:
             logger.exception(e)
 
-        return heritageId, areaId
+        # Remove duplicate
+
+
+        return area_heritages
 
     def get_documents_to_index(self, fetchTiles=True, datatype_factory=None, node_datatypes=None):
         """
@@ -314,11 +354,20 @@ class Resource(models.ResourceInstance):
         document["date_ranges"] = []
         document["ids"] = []
         document["provisional_resource"] = "true" if sum([len(t.data) for t in tiles]) == 0 else "false"
-        heritageId, areaId = self.resolve_resource_area(provisional=True)
-        if heritageId is not None:
-            document["related_heritage"] = heritageId
-        if areaId is not None:
-            document["related_heritage_area"] = areaId
+        # heritageId, areaId = self.resolve_resource_area(provisional=True)
+        area_heritages = self.resolve_resource_area(provisional=True)
+        # if heritageId is not None:
+        #     document["related_heritage"] = heritageId
+        # if areaId is not None:
+        #     document["related_heritage_area"] = areaId
+        if area_heritages:
+            document["related_heritage"] = []
+            document["related_heritage_area"] = []
+            for area_heritage in area_heritages:
+                if area_heritage[0] is not None and document["related_heritage"].count(area_heritage[0])<=0:
+                    document["related_heritage"].append("".join(area_heritage[0].split("-")))
+                if area_heritage[1] is not None and document["related_heritage_area"].count(area_heritage[1])<=0:
+                    document["related_heritage_area"].append("".join(area_heritage[1].split("-"))) 
 
         try:
             document["validation_type"] = self.get_node_values(SystemSettings.CATEGORY_NAME, provisional=True)
@@ -587,15 +636,16 @@ class Resource(models.ResourceInstance):
 
         if len(values) == 0 and provisional:
             for tile in tiles:
-                for user, edit in tile.provisionaledits.items():
-                    if edit["status"] == "review":
-                        for node_id, value in edit["value"].items():
-                            if node_id == str(nodes[0].nodeid):
-                                if type(value) is list:
-                                    for v in value:
-                                        values.append(parse_node_value(v) if parse else v)
-                                else:
-                                    values.append(parse_node_value(value) if parse else value)
+                if tile.provisionaledits:
+                    for user, edit in tile.provisionaledits.items():
+                        if edit["status"] == "review":
+                            for node_id, value in edit["value"].items():
+                                if node_id == str(nodes[0].nodeid):
+                                    if type(value) is list:
+                                        for v in value:
+                                            values.append(parse_node_value(v) if parse else v)
+                                    else:
+                                        values.append(parse_node_value(value) if parse else value)
 
         return values
 
