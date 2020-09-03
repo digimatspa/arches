@@ -316,7 +316,10 @@ class ResourcePermissionDataView(View):
         graphid = request.POST.get("graphid", None)
         result = None
         if action == "restrict":
-            result = self.make_instance_private(resourceid, graphid)
+            #result = self.make_instance_private(resourceid, graphid)
+            resource = Resource(resourceid)
+            result = self.get_instance_permissions(resource)
+            result["limitedaccess"] = True
         elif action == "open":
             result = self.make_instance_public(resourceid, graphid)
         else:
@@ -375,6 +378,21 @@ class ResourcePermissionDataView(View):
         result["limitedaccess"] = (len(get_users_with_perms(resource_instance)) + len(get_groups_with_perms(resource_instance))) > 1
         instance_creator = get_instance_creator(resource_instance)
         result["creatorid"] = instance_creator["creatorid"]
+
+        # Dirty fix to limit resource access to some groups
+        try:
+            dittaGroup = Group.objects.get(name="Ditta")
+            assign_perm("no_access_to_resourceinstance", dittaGroup, resource_instance)
+        except:
+            pass
+
+        try:
+            cantiereGroup = Group.objects.get(name="Cantiere esterno")
+            assign_perm("no_access_to_resourceinstance", cantiereGroup, resource_instance)
+        except:
+            pass
+
+
         return result
 
     def make_instance_private(self, resourceinstanceid, graphid=None):

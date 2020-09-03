@@ -327,18 +327,18 @@ def check_resource_instance_permissions(user, resourceid, permission):
         all_perms = []
         #get role permissions first
         if not user.is_superuser:
-            all_perms = get_role_permissions_for_resource(user, resource)
-
-        if len(all_perms) == 0:
             #get user resource native permissions
             all_perms = get_perms(user, resource)
+
+        if len(all_perms) == 0:
+            all_perms = get_role_permissions_for_resource(user, resource)
 
         if len(all_perms) == 0:  # no permissions assigned. permission implied
             result["permitted"] = "unknown"
             return result
         else:
             # check role permissions
-            if "no_access_to_resourceinstance" in all_perms:  # user is restricted
+            if "no_access_to_resourceinstance" in all_perms and len(all_perms) == 1:  # user is restricted
                 result["permitted"] = False
                 return result
             elif permission in all_perms:  # user is permitted
