@@ -40,6 +40,9 @@ class SystemSettings(LazySettings):
     SYSTEM_SETTINGS_RESOURCE_MODEL_ID = "ff623370-fa12-11e6-b98b-6c4008b05c4c"
     RESOURCE_INSTANCE_ID = "a106c400-260c-11e7-a604-14109fd34195"
     HERITAGE_GRAPH_ID = "99417385-b8fa-11e6-84a5-026d961c88e6"
+    HERITAGE_AREA_TILE_ID = "2dda3826-4345-11ea-a470-08002713135a"
+    HERITAGE_AREA_CONCEPT_NAME = "Area/settore archeologico"
+    REPORT_GRAPH_ID = "0eb358a6-3172-11ea-8080-080027c5bc64"
     EXTERNALS_GROUP = "Esterno"
     VALIDATION_TYPES = ["Degrado", "Dissesto", "Vegetazione"]
     SEG_MODEL_ID = "0eb358a6-3172-11ea-8080-080027c5bc64"
@@ -48,7 +51,40 @@ class SystemSettings(LazySettings):
     SEG_TYPE_ALERT = "Urgente"
     HERITAGE_FIELD_NAME = "Bene archeologico"
     AREA_FIELD_NAME = "Area archeologica"
+    AREA_CONCEPT_ID = "2e47db53-4fd4-4c4e-beaa-df1686989932"
 
+    #cantiere / calendar
+    TIMESCHEDULE_NODEID = '9a2345fe-e62b-11ea-aee0-08002776b909'
+    TIMESCHEDULE_FILE_ID = '0d731ce0-f1c2-11ea-949b-08002771e280'
+    CANTIERE_STATUS_NODEID = 'f98599a4-d2ab-11ea-b0a1-08002776b909'
+    CANTIERE_ID = "826cabc9-d2ab-11ea-b0a1-08002776b909"
+    DITTE_FIELDS = {
+        "Aggiudicataria": "email ditta Aggiudicataria",
+        "Esecutrice": "email ditta Esecutrice",
+        "Subappaltatrice": "email ditta Subappaltatrice"
+    }
+
+    # dashboard_config
+    SEARCH_RESOURCES_PATH = "search/resources"
+    SEARCH_RELATED_RESOURCES_PATH = "resource/related"
+    SEARCH_CONCEPT_PATH = "concepts/search"
+    SEARCH_GRAPH_PATH = "dashboard"
+    HERITAGE_GENERAL_DATA_TILE_ID = "1667fc86-4343-11ea-a470-08002713135a"
+    HERITAGE_RELATED_3DHOPS_GRAPH_ID = "9b591814-c0f2-11e8-9c8c-0242ac120004"
+    HOP3D_HERITAGE_TILE_ID = "78df9e1a-8ded-11ea-8278-08002776b909"
+    HOP3D_TITLE_LABEL = "Titolo"
+    HOP3D_DESCRIPTION_LABEL = "Descrizione"
+    HOP3D_IMAGE_PREVIEW_LABEL = "Immagine di anteprima"
+
+    # webgis_config
+    SITE_STATUS_NODEGROUPID = 'b27e29fe-d2ab-11ea-b0a1-08002776b909'
+    SITE_NAME_NODEGROUPID = 'b27e29fe-d2ab-11ea-b0a1-08002776b909'
+    SITE_LOCATION_NODEID = 'd3f27c9c-d72a-11ea-889d-08002776b909'
+    SITE_STATUS_NODEID = 'f98599a4-d2ab-11ea-b0a1-08002776b909'
+    SITE_NAME_NODEID = 'faacabf6-d2ab-11ea-b0a1-08002776b909'
+    TOKEN_QUERY_PARAM_NAME = 'access_token'
+    TOKEN_URL = '/helgoland/token/'
+    TOKEN = None
 
     def __init__(self, *args, **kwargs):
         super(SystemSettings, self).__init__(*args, **kwargs)
