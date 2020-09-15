@@ -1128,7 +1128,6 @@ class UserXNotificationType(models.Model):
 def send_email_on_save(sender, instance, **kwargs):
     """Checks if a notification type needs to send an email, does so if email server exists
     """
-
     if instance.notif.notiftype is not None and instance.isread is False:
         if UserXNotificationType.objects.filter(user=instance.recipient, notiftype=instance.notif.notiftype, emailnotify=False).exists():
             return False
@@ -1143,16 +1142,18 @@ def send_email_on_save(sender, instance, **kwargs):
                     email_to = instance.recipient.email
                 else:
                     email_to = context["email"]
-                subject, from_email, to = instance.notif.notiftype.name, "from@example.com", email_to
+
+                subject, from_email, to = context.get("subject", instance.notif.notiftype.name), context.get("email_from", "from@example.com"), email_to
+                # subject, from_email, to = instance.notif.notiftype.name, "from@example.com", email_to
                 msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
                 msg.attach_alternative(html_content, "text/html")
                 msg.send()
                 if instance.notif.notiftype.webnotify is not True:
                     instance.isread = True
                     instance.save()
-        except Exception as e:
+        except Exception as err:
             logger = logging.getLogger(__name__)
-            logger.warn("Email Server not correctly set up. See settings to configure.")
+            logger.warn(f"Email Server not correctly set up. See settings to configure: {err}")
 
     return False
 

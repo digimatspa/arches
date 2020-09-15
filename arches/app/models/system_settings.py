@@ -58,10 +58,12 @@ class SystemSettings(LazySettings):
     TIMESCHEDULE_FILE_ID = '0d731ce0-f1c2-11ea-949b-08002771e280'
     CANTIERE_STATUS_NODEID = 'f98599a4-d2ab-11ea-b0a1-08002776b909'
     CANTIERE_ID = "826cabc9-d2ab-11ea-b0a1-08002776b909"
+    CRONO_STARTDATE_NODEID = 'd6920010-f1c1-11ea-949b-08002771e280'
+    CRONO_ENDDATE_NODEID = 'f320c40a-f1c1-11ea-949b-08002771e280'
     DITTE_FIELDS = {
-        "Aggiudicataria": "email ditta Aggiudicataria",
-        "Esecutrice": "email ditta Esecutrice",
-        "Subappaltatrice": "email ditta Subappaltatrice"
+        "Nome ditta aggiudicataria": "Email ditta aggiudicataria",
+        "Nome ditta esecutrice": "Email ditta esecutrice",
+        "Nome ditta subappaltatrice": "Email ditta subappaltatrice"
     }
 
     # dashboard_config
