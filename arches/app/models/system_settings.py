@@ -84,9 +84,15 @@ class SystemSettings(LazySettings):
     SITE_LOCATION_NODEID = 'd3f27c9c-d72a-11ea-889d-08002776b909'
     SITE_STATUS_NODEID = 'f98599a4-d2ab-11ea-b0a1-08002776b909'
     SITE_NAME_NODEID = 'faacabf6-d2ab-11ea-b0a1-08002776b909'
+    SITE_TYPE_NODEID ='5dff21ff-f659-11ea-aee2-08002771e280'
+    SITE_TYPE_NODEGROUPID = 'b27e29fe-d2ab-11ea-b0a1-08002776b909'
     TOKEN_QUERY_PARAM_NAME = 'access_token'
     TOKEN_URL = '/helgoland/token/'
     TOKEN = None
+
+    # DATATYPES default configs
+    FILE_CRONO_START_DATE_NODE_ID = 'd6920010-f1c1-11ea-949b-08002771e280'
+    FILE_CRONO_END_DATE_NODE_ID = 'f320c40a-f1c1-11ea-949b-08002771e280'
 
     def __init__(self, *args, **kwargs):
         super(SystemSettings, self).__init__(*args, **kwargs)
