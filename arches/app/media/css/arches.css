@@ -4929,7 +4929,7 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
     stroke: #454545;
     stroke-width: 2px;
     fill: #dcecfa;
-    opacity: 1.;
+    opacity: 1;
     cursor: pointer;
 }
 
@@ -5003,6 +5003,7 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
     fill: rgb(220, 236, 250);
     opacity: 1;
     cursor: pointer;
+    z-index: 200000;
 }
 
 .relatedlink {
@@ -8986,6 +8987,10 @@ a.clear-geojson-button:hover {
     text-overflow: ellipsis;
 }
 
+.mapboxgl-canvas:focus {
+    outline: none;
+}
+
 .map-widget-tool:nth-child(1) {
     padding-left: 0px;
     width: 50px;
@@ -9780,15 +9785,23 @@ a.search-query-link-captions:focus {
 }
 
 .search-count-container {
-    padding: 10px 20px 0px 20px;
+    padding: 10px 20px;
     background: #f4f4f4;
     border-bottom: 1px solid #ddd;
+    text-align-last: justify;
+    height: 40px;
+    display: inline-flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .search-title {
     font-size: 17px;
     font-weight: 500;
     margin-top: 0px;
+    display: inline-block;
+    margin-bottom: 0px;
 }
 
 .search-candidate-title,
@@ -9880,6 +9893,10 @@ ul.pagination {
 
 .time-search-container #calendar .calendar .search-label {
     margin-top: 10px;
+}
+
+.hide-datepicker-time-option .bootstrap-datetimepicker-widget table td span {
+    display: none;
 }
 
 .calendar.picker {
@@ -10787,7 +10804,7 @@ table.table.dataTable {
 .faceted-search-card-container {
     border: 1px solid #ddd;
     padding: 20px;
-    margin: 10px;
+    margin: 15px;
     background: #f9f9f9;
 }
 
@@ -10879,7 +10896,8 @@ a.search-facet-item.disabled {
 }
 
 .facet-btn-group {
-    width: 100%;
+    display: block;
+    margin: 10px 15px 50px 15px;
 }
 
 .facet-btn {
@@ -10893,13 +10911,27 @@ a.search-facet-item.disabled {
 }
 
 .facet-label {
-    margin-left: 15px;
+    margin-left: 5px;
     margin-bottom: 5px;
 }
 
 .facet-body {
     padding-top: 5px;
     padding-bottom: 45px;
+    margin-left: 10px;
+}
+
+.facet-body .col-md-4.col-lg-3 {
+    padding-right: 5px;
+
+}
+
+.facet-body div div .select2-container {
+    border: none;
+}
+
+.facet-body  .chosen-container-single .chosen-single {
+    height: 36px;
 }
 
 .related-resources-header .resource-instance-wrapper {

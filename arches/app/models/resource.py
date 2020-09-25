@@ -651,7 +651,7 @@ class Resource(models.ResourceInstance):
 
     def remove_resource_instance_permissions(self):
         groups = list(Group.objects.all())
-        users = [user for user in get_user_model().objects.all() if user.is_superuser is False]
+        users = list(get_user_model().objects.all())
         for identity in groups + users:
             for perm in ["no_access_to_resourceinstance", "view_resourceinstance", "change_resourceinstance", "delete_resourceinstance"]:
                 remove_perm(perm, identity, self)
