@@ -318,12 +318,26 @@ define([
                         return data;
                     }
                 },
+                graphNameLookup: function(graphid){
+                    var elemName = null;
+                    params.node.config.graphs().forEach(function(elem) {
+                        if(elem.graphid == graphid) {
+                            elemName = elem.name;
+                        }
+                    });
+
+                    return elemName;
+                },
                 results: function(data, page) {
+                    _this = this;
                     if (!data['paging-filter'].paginator.has_next && self.renderContext !== 'search') {
                         self.resourceTypesToDisplayInDropDown.forEach(function(graphid) {
-                            var graph = self.graphLookup[graphid];
+                            //MOD START
+                            //var graph = self.graphLookup[graphid];
                             var val = {
-                                name: graph.name,
+                                //name: graph.name,
+                                name : _this.graphNameLookup(graphid),
+                            //MOD END
                                 _id: graphid,
                                 isGraph: true
                             };

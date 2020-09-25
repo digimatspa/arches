@@ -1038,7 +1038,7 @@ class UserProfile(models.Model):
         db_table = "user_profile"
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=get_user_model())
 def create_permissions_for_new_users(sender, instance, created, **kwargs):
     from arches.app.models.resource import Resource
 
