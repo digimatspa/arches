@@ -44,6 +44,8 @@ class SystemSettings(LazySettings):
     HERITAGE_AREA_CONCEPT_NAME = "Area/settore archeologico"
     REPORT_GRAPH_ID = "0eb358a6-3172-11ea-8080-080027c5bc64"
     EXTERNALS_GROUP = "Esterno"
+    DITTA_GROUP = "Ditta"
+    CANTIERE_ESTERNO_GROUP = "Cantiere esterno"
     VALIDATION_TYPES = ["Degrado", "Dissesto", "Vegetazione"]
     SEG_MODEL_ID = "0eb358a6-3172-11ea-8080-080027c5bc64"
     CATEGORY_NAME = "Categoria"

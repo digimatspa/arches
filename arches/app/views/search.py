@@ -38,11 +38,12 @@ from arches.app.search.components.base import SearchFilterFactory
 from arches.app.search.mappings import RESOURCES_INDEX
 from arches.app.views.base import MapBaseManagerView
 from arches.app.views.concept import get_preflabel_from_conceptid
-from arches.app.utils.permission_backend import get_nodegroups_by_perm, user_is_resource_reviewer
+from arches.app.utils.permission_backend import get_nodegroups_by_perm, user_is_resource_reviewer, get_restricted_instances
 import arches.app.utils.zip as zip_utils
 import arches.app.utils.task_management as task_management
 import arches.app.tasks as tasks
 from io import StringIO
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -379,6 +380,22 @@ def append_role_permission_filter_dsl(request, search_results_object):
                    }
                   }
             _filter.append(sub)
+
+
+        # Restrict access to resources of the following groups: ditta / cantiere esterno
+        if request.user.groups.filter(Q(name=settings.DITTA_GROUP) | Q(name=settings.CANTIERE_ESTERNO_GROUP)).exists():
+            instances = get_restricted_instances(request.user,None,False)
+            for instance in instances:
+                sub = { "bool": {
+                    "must":
+                        [{
+                            "match_phrase": {
+                                "resourceinstanceid": instance
+                            }
+                        }]
+                    }
+                }
+                must_not.append(sub)
 
         #no permissions set case
         if len(permitted_areas) == 0 and len(permitted_instances) == 0:

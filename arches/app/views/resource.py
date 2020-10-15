@@ -317,10 +317,11 @@ class ResourcePermissionDataView(View):
         result = None
         if action == "restrict":
             #result = self.make_instance_private(resourceid, graphid)
-            resource = Resource(resourceid)
+            resource = models.ResourceInstance.objects.get(pk=resourceid)
             result = self.get_instance_permissions(resource)
             result["limitedaccess"] = True
         elif action == "open":
+            resource = models.ResourceInstance.objects.get(pk=resourceid)
             result = self.make_instance_public(resourceid, graphid)
         else:
             data = JSONDeserializer().deserialize(request.body)
@@ -328,6 +329,10 @@ class ResourcePermissionDataView(View):
             if "instanceid" in data:
                 resource = models.ResourceInstance.objects.get(pk=data["instanceid"])
                 result = self.get_instance_permissions(resource)
+
+        resource_ = Resource(resource.resourceinstanceid)
+        resource_.graph = resource.graph
+        resource_.index()
         return JSONResponse(result)
 
     def delete(self, request):
@@ -379,19 +384,8 @@ class ResourcePermissionDataView(View):
         instance_creator = get_instance_creator(resource_instance)
         result["creatorid"] = instance_creator["creatorid"]
 
-        # Dirty fix to limit resource access to some groups
-        try:
-            dittaGroup = Group.objects.get(name="Ditta")
-            assign_perm("no_access_to_resourceinstance", dittaGroup, resource_instance)
-        except:
-            pass
-
-        try:
-            cantiereGroup = Group.objects.get(name="Cantiere esterno")
-            assign_perm("no_access_to_resourceinstance", cantiereGroup, resource_instance)
-        except:
-            pass
-
+        # Fix limit resource access groups ( Ditta / Cantiere Esterno)
+        limit_cantiere_groups(resource_instance)
 
         return result
 
@@ -409,8 +403,13 @@ class ResourcePermissionDataView(View):
 
     def make_instance_public(self, resourceinstanceid, graphid=None):
         resource = Resource(resourceinstanceid)
-        resource.graph_id = graphid if graphid else str(models.ResourceInstance.objects.get(pk=resourceinstanceid).graph_id)
+        resource_ = models.ResourceInstance.objects.get(pk=resourceinstanceid)
+        resource.graph_id = graphid if graphid else str(resource_.graph_id)
         resource.remove_resource_instance_permissions()
+
+        # Fix limit resource access groups ( Ditta / Cantiere Esterno)
+        limit_cantiere_groups(resource_)
+
         return self.get_instance_permissions(resource)
 
     def apply_permissions(self, data, user, revert=False):
@@ -1016,3 +1015,19 @@ class RelatedResourcesView(BaseManagerView):
             ret = self.paginate_related_resources(related_resources, page, request)
 
         return JSONResponse(ret, indent=4)
+
+
+# Dirty fix to limit resource access to some groups
+
+def limit_cantiere_groups(resource_instance):
+    try:
+        dittaGroup = Group.objects.get(name=settings.DITTA_GROUP)
+        assign_perm("no_access_to_resourceinstance", dittaGroup, resource_instance)
+    except:
+        pass
+
+    try:
+        cantiereGroup = Group.objects.get(name=settings.CANTIERE_ESTERNO_GROUP)
+        assign_perm("no_access_to_resourceinstance", cantiereGroup, resource_instance)
+    except:
+        pass

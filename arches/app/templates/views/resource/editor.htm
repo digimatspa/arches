@@ -34,7 +34,36 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 {% endblock graph_title %}
 
 {% block main_content %}
+<script>
+    function togglePanel() {
+        var currentSize = $('.left-panel').width();
+        if(currentSize > 0) {
+            $('.left-panel').width(0)
+        } else {
+            $('.left-panel').width("calc(100% - 15px)")    
+        } 
+      }
+</script>
+
+<style>
+    @media screen and (min-width: 550px) {
+        .toggle-button-a {
+            visibility: hidden;
+        }
+    }
+
+    @media screen and (max-width: 550px) {
+        .toggle-button-a {
+            position: absolute; right: 20px; top: 5px; z-index: 20; visibility: block;
+        }
+        .left-panel {
+            width: calc(100% - 15px);
+        }
+    }
+</style>
+
 <div class="content-panel">
+    <button id="toggleButton" class="btn btn btn-primary btn-labeled fa fa-arrow-left pull-left toggle-button-a" type="button" onclick="togglePanel()">Pannello</button>
     <div class="panel-container">
         <div class="left-panel graph-designer" data-bind="resizableSidepanel:true">
             <div class="left-panel-inner-container">
