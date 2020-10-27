@@ -7687,6 +7687,7 @@ a.mega-dropdown-toggle.disabled {
     border-radius: 2px;
     padding: 0px 12px 0px 7px;
     margin-top: -1px;
+    overflow-y: hidden;
 }
 
 #container .table-bordered td,
@@ -12936,6 +12937,18 @@ a.jstree-anchor.permissions-widget {
 
 .style-tools-color-visualizer {
     border: 1px solid #000;
+}
+
+.lang-switch .chosen-single {
+    border: none;
+    font-size: 12px;
+    color: #454545;
+    padding-top: 8px;
+}
+
+.lang-switch .chosen-drop {
+    font-size: 12px;
+    color: #454545;
 }
 
 @keyframes loader {

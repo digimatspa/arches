@@ -703,7 +703,7 @@ class ResourceDescriptors(View):
 @method_decorator(can_read_resource_instance, name="dispatch")
 class ResourceReportView(MapBaseManagerView):
     def get(self, request, resourceid=None):
-        lang = request.GET.get("lang", settings.LANGUAGE_CODE)
+        lang = request.GET.get("lang", request.LANGUAGE_CODE)
         resource = Resource.objects.get(pk=resourceid)
         displayname = resource.displayname
         resource_models = (
@@ -839,6 +839,7 @@ class ResourceReportView(MapBaseManagerView):
             resourceid=resourceid,
             displayname=displayname,
             version=__version__,
+            hide_empty_nodes=settings.HIDE_EMPTY_NODES_IN_REPORT,
         )
 
         if graph.iconclass:
@@ -899,7 +900,7 @@ class RelatedResourcesView(BaseManagerView):
             ret = {str(node.graph_id) for node in nodes}
             return JSONResponse(ret)
 
-        lang = request.GET.get("lang", settings.LANGUAGE_CODE)
+        lang = request.GET.get("lang", request.LANGUAGE_CODE)
         start = request.GET.get("start", 0)
         ret = []
         try:
@@ -915,7 +916,7 @@ class RelatedResourcesView(BaseManagerView):
         return JSONResponse(ret)
 
     def delete(self, request, resourceid=None):
-        lang = request.GET.get("lang", settings.LANGUAGE_CODE)
+        lang = request.GET.get("lang", request.LANGUAGE_CODE)
         se = SearchEngineFactory().create()
         req = dict(request.GET)
         ids_to_delete = req["resourcexids[]"]
@@ -938,7 +939,7 @@ class RelatedResourcesView(BaseManagerView):
         return JSONResponse(ret, indent=4)
 
     def post(self, request, resourceid=None):
-        lang = request.GET.get("lang", settings.LANGUAGE_CODE)
+        lang = request.GET.get("lang", request.LANGUAGE_CODE)
         se = SearchEngineFactory().create()
         res = dict(request.POST)
         relationshiptype = res["relationship_properties[relationshiptype]"][0]

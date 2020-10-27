@@ -184,7 +184,8 @@ class Command(BaseCommand):
 
         parser.add_argument("-b", "--is_basemap", action="store_true", dest="is_basemap", help="Add to make the layer a basemap.")
 
-        parser.add_argument("-db", "--setup_db", action="store", dest="setup_db", default=False, help="Rebuild database")
+        parser.add_argument("-db", "--setup_db", action="store_true", dest="setup_db", default=False, help="Rebuild database")
+        parser.add_argument("-dev", "--dev", action="store_true", dest="dev", help="Loading package for development")
 
         parser.add_argument(
             "-bulk",
@@ -291,7 +292,13 @@ class Command(BaseCommand):
 
         if options["operation"] in ["load", "load_package"]:
             self.load_package(
-                options["source"], options["setup_db"], options["overwrite"], options["bulk_load"], options["stage"], options["yes"]
+                options["source"],
+                options["setup_db"],
+                options["overwrite"],
+                options["bulk_load"],
+                options["stage"],
+                options["yes"],
+                options["dev"],
             )
 
         if options["operation"] in ["create", "create_package"]:
@@ -466,7 +473,7 @@ class Command(BaseCommand):
             self.export_package_settings(dest_dir, "true")
 
     def load_package(
-        self, source, setup_db=True, overwrite_concepts="ignore", bulk_load=False, stage_concepts="keep", yes=False,
+        self, source, setup_db=False, overwrite_concepts="ignore", bulk_load=False, stage_concepts="keep", yes=False, dev=False
     ):
 
         celery_worker_running = task_management.check_if_celery_available()
@@ -529,17 +536,17 @@ class Command(BaseCommand):
                     sys.exit()
 
         @transaction.atomic
-        def load_preliminary_sql(package_dir):
-            resource_views = glob.glob(os.path.join(package_dir, "preliminary_sql", "*.sql"))
+        def load_sql(package_dir, sql_dir):
+            sql_files = glob.glob(os.path.join(package_dir, sql_dir, "*.sql"))
             try:
                 with connection.cursor() as cursor:
-                    for view in resource_views:
-                        with open(view, "r") as f:
+                    for sql_file in sql_files:
+                        with open(sql_file, "r") as f:
                             sql = f.read()
                             cursor.execute(sql)
             except Exception as e:
                 print(e)
-                print("Could not connect to db")
+                print("Failed to load sql files")
 
         def load_resource_views(package_dir):
             resource_views = glob.glob(os.path.join(package_dir, "business_data", "resource_views", "*.sql"))
@@ -551,7 +558,7 @@ class Command(BaseCommand):
                             cursor.execute(sql)
             except Exception as e:
                 print(e)
-                print("Could not connect to db")
+                print("Failed to load resource views")
 
         def load_graphs(package_dir):
             try:
@@ -653,14 +660,16 @@ class Command(BaseCommand):
                 from celery import chord
                 from arches.app.tasks import import_business_data, package_load_complete, on_chord_error
 
+                valid_resource_paths = [
+                    path
+                    for path in business_data
+                    if (".csv" in path and os.path.exists(path.replace(".csv", ".mapping"))) or (".json" in path)
+                ]
+
                 # assumes resources in csv do not depend on data being loaded prior from json in same dir
-                chord(
-                    [
-                        import_business_data.s(data_source=path, overwrite=True, bulk_load=bulk_load)
-                        for path in business_data
-                        if (".csv" in path and os.path.exists(path.replace(".csv", ".mapping"))) or (".json" in path)
-                    ]
-                )(package_load_complete.s().on_error(on_chord_error.s()))
+                chord([import_business_data.s(data_source=path, overwrite=True, bulk_load=bulk_load) for path in valid_resource_paths])(
+                    package_load_complete.signature(kwargs={"valid_resource_paths": valid_resource_paths}).on_error(on_chord_error.s())
+                )
             else:
                 for path in business_data:
                     if path not in erring_csvs:
@@ -754,6 +763,10 @@ class Command(BaseCommand):
         def cache_graphs():
             management.call_command("cache", operation="graphs")
 
+        def update_resource_materialized_view():
+            with connection.cursor() as cursor:
+                cursor.execute("REFRESH MATERIALIZED VIEW mv_geojson_geoms;")
+
         def load_apps(package_dir):
             package_apps = glob.glob(os.path.join(package_dir, "apps", "*"))
             for app in package_apps:
@@ -797,15 +810,15 @@ class Command(BaseCommand):
         if not package_location:
             raise Exception("this is an invalid package source")
 
-        if setup_db is not False:
-            if setup_db.lower() in ("t", "true", "y", "yes"):
-                management.call_command("setup_db", force=True)
-
+        if setup_db:
+            management.call_command("setup_db", force=True)
+        if dev:
+            management.call_command("add_test_users")
         load_ontologies(package_location)
         print("loading package_settings.py")
         load_package_settings(package_location)
         print("loading preliminary sql")
-        load_preliminary_sql(package_location)
+        load_sql(package_location, "preliminary_sql")
         print("loading system settings")
         load_system_settings(package_location)
         print("loading project extensions from project")
@@ -850,12 +863,10 @@ class Command(BaseCommand):
             css_files = glob.glob(os.path.join(css_source, "*.css"))
             for css_file in css_files:
                 shutil.copy(css_file, css_dest)
-        print("caching resource models")
-        try:
-            cache_graphs()
-        except Exception as e:
-            print("Unable to cache graph proxy models")
-            print(e)
+        print("Refreshing the resource view")
+        update_resource_materialized_view()
+        print("loading post sql")
+        load_sql(package_location, "post_sql")
         if celery_worker_running:
             print("Celery detected: Resource instances loading. Log in to arches to be notified on completion.")
         else:
@@ -1056,18 +1067,11 @@ will be very jumbled."""
             data_source = [data_source]
 
         for path in data_source:
-            if os.path.isabs(path):
-                if os.path.isfile(os.path.join(path)):
-                    relations = csv.DictReader(open(path, "r"))
-                    RelationImporter().import_relations(relations)
-                else:
-                    utils.print_message("No file found at indicated location: {0}".format(path))
-                    sys.exit()
+            if os.path.isfile(os.path.join(path)):
+                relations = csv.DictReader(open(path, "r"))
+                RelationImporter().import_relations(relations)
             else:
-                utils.print_message(
-                    "ERROR: The specified file path appears to be relative. \
-                    Please rerun command with an absolute file path."
-                )
+                utils.print_message("No file found at indicated location: {0}".format(path))
                 sys.exit()
 
     def import_graphs(self, data_source="", overwrite_graphs=True):
