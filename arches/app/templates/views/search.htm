@@ -96,7 +96,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
                 <!-- Title Block -->
                 <div class="search-count-container">
                     <h3 class="search-title" data-bind="text: '{% trans 'Results: ' %}' + total()"></h3>
-                    <!--ko if: ko.unwrap(sharedStateObject.filterApplied) -->
+                    <!--ko if: sharedStateObject.filterApplied() -->
                     <button class="btn-sm btn btn-mint btn-labeled" style="padding: 2px 9px;" data-bind="click: function() {sharedStateObject.clearQuery();}">{% trans "Clear Filters" %}</button>
                     <!--/ko-->
                 </div>
@@ -128,7 +128,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
                     {% if user|can_read_resource_instance %}
                     <button class="search-type-btn relative" style="" data-bind="css: {'active': $parent.sharedStateObject.selectedTab() === filter.componentname}, click: function(){$parent.sharedStateObject.selectedTab(filter.componentname)}">
                         <i data-bind="css: filter.icon"></i>
-                        <span data-bind="text: filter.name"></span>
+                        <span data-bind="visible: filter.name=='Advanced'">Avanzata</span>
+                        <span data-bind="visible: filter.name=='Map Filter'">Filtro mappa</span>
+                        <span data-bind="visible: filter.name=='Details'">Dettagli</span>
+                        <span data-bind="visible: filter.name=='Related'">Risorse Correlate</span>
+                        <!-- <span data-bind="text: filter.name"></span> -->
+            
                     </button>
                     {% endif %}
                     <!-- /ko -->
