@@ -442,10 +442,10 @@ define([
                             if (item._source) {
                                 return item._source.displayname;
                             } else {
-                                return '<b> Create a new ' + item.name + ' . . . </b>';
+                                return '<b> Crea nuovo ' + item.name + ' . . . </b>';
                             }
                         } else {
-                            return '<span>' + item._source.displayname + ' Cannot be related</span>';
+                            return '<span>' + item._source.displayname + ' Non correlabili</span>';
                         }
                     },
                     formatResultCssClass: function(item) {

@@ -1,7 +1,7 @@
 {% load staticfiles %} {% load i18n %} {% load template_tags %}
 
 <!--ko let: {self: $data} -->
-<!--ko if: resourceEditorContext && displaySplash()-->
+<!--ko if: resourceEditorContext && displaySplash-->
 <div id="rr-splash" class="rr-splash">
 
     <!-- Image -->
@@ -44,7 +44,7 @@
 </div>
 <!-- /ko -->
 
-<!--ko if: !displaySplash()-->
+<!--ko if: !displaySplash-->
 <div id="related-resources-drag-panel" style="overflow-y: hidden; position: relative;" class="search-container related-resources-container">
 
     <!-- Target -->
