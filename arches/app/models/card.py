@@ -257,13 +257,16 @@ class Card(models.CardModel):
         # provide a models.CardXNodeXWidget model for every node
         # even if a widget hasn't been configured
         ret["widgets"] = self.widgets
+        widget_nodes = [el.node_id for  el in self.widgets]
+
         if "widgets" not in exclude:
             for node in ret["nodes"]:
-                found = False
-                for widget in ret["widgets"]:
-                    if node.nodeid == widget.node_id:
-                        found = True
-                if not found:
+                # found = False
+                # for widget in ret["widgets"]:
+                #     if node.nodeid == widget.node_id:
+                #         found = True
+                # if not found:
+                if node.nodeid not in widget_nodes:
                     widget = models.DDataType.objects.get(pk=node.datatype).defaultwidget
                     if widget:
                         widget_model = models.CardXNodeXWidget()

@@ -73,6 +73,7 @@ class Graph(models.GraphModel):
         self._card_constraints = []
         self._constraints_x_nodes = []
         self.temp_node_name = _("New Node")
+        self.cached_nodegroups = None
 
         if args:
             if isinstance(args[0], dict):
@@ -467,16 +468,42 @@ class Graph(models.GraphModel):
 
         """
 
-        tree = {"node": root if root else self.root, "children": [], "parent_edge": None}
+        root_item = root if root else self.root
+        tree = {"node": root_item, "children": [], "parent_edge": None}
 
-        def find_child_edges(tree):
-            for edge_id, edge in self.edges.items():
-                if edge.domainnode == tree["node"]:
-                    tree["children"].append(find_child_edges({"node": edge.rangenode, "children": [], "parent_edge": edge}))
+        trees = dict()
+        trees[root_item] = tree
 
-            return tree
+        edge_map = { edge.domainnode : edge for edge in self.edges.values()}
 
-        return find_child_edges(tree)
+        for edge_id, edge in self.edges.items():
+            tree = trees.get(edge.rangenode, None)
+            if not tree:
+                tree = {"node": edge.rangenode, "children": [], "parent_edge": edge}
+                trees[edge.rangenode] = tree
+            else:
+                trees[edge.rangenode]["parent_edge"] = edge_map.get(edge.domainnode, None)
+
+            tree_domain = trees.get(edge.domainnode, None)
+            if not tree_domain:
+                tree_domain = {"node": edge.domainnode, "children": [], "parent_edge": None}
+                trees[edge.domainnode] = tree_domain
+
+            tree_domain["children"].append(tree)
+
+        return trees[root_item]
+
+        # tree = {"node": root if root else self.root, "children": [], "parent_edge": None}
+        #
+        # def find_child_edges(tree):
+        #     for edge_id, edge in self.edges.items():
+        #         if edge.domainnode == tree["node"]:
+        #             tree["children"].append(find_child_edges({"node": edge.rangenode, "children": [], "parent_edge": edge}))
+        #
+        #     return tree
+        #
+        # return find_child_edges(tree)
+
 
     def populate_null_nodegroups(self):
         """
@@ -486,20 +513,37 @@ class Graph(models.GraphModel):
 
         tree = self.get_tree()
 
-        def traverse_tree(tree, current_nodegroup=None):
-            if tree["node"]:
-                if tree["node"].is_collector:
-                    nodegroup = self.get_or_create_nodegroup(nodegroupid=tree["node"].nodegroup_id)
+        # def traverse_tree(tree, current_nodegroup=None):
+        #     if tree["node"]:
+        #         if tree["node"].is_collector:
+        #             nodegroup = self.get_or_create_nodegroup(nodegroupid=tree["node"].nodegroup_id)
+        #             nodegroup.parentnodegroup = current_nodegroup
+        #             current_nodegroup = nodegroup
+        
+        #         tree["node"].nodegroup = current_nodegroup
+        
+        #     for child in tree["children"]:
+        #         traverse_tree(child, current_nodegroup)
+        #     return tree
+        
+        # traverse_tree(tree)
+
+
+        from collections import deque
+        stack = [(tree, None)]
+
+        while stack:
+            node, current_nodegroup = stack.pop()
+            if node["node"]:
+                if node["node"].is_collector:
+                    nodegroup = self.get_or_create_nodegroup(nodegroupid=node["node"].nodegroup_id, cached=True)
                     nodegroup.parentnodegroup = current_nodegroup
                     current_nodegroup = nodegroup
 
-                tree["node"].nodegroup = current_nodegroup
+                node["node"].nodegroup = current_nodegroup
 
-            for child in tree["children"]:
-                traverse_tree(child, current_nodegroup)
-            return tree
-
-        traverse_tree(tree)
+            for child in reversed(node.get('children', [])):
+                stack.append((child, current_nodegroup))
 
         return tree
 
@@ -1125,11 +1169,13 @@ class Graph(models.GraphModel):
                     ret = [{"ontology_property": "", "ontology_classes": list(ontology_classes)}]
         return ret
 
-    def get_nodegroups(self, nodegroupid=None):
+    def get_nodegroups(self, nodegroupid=None, cached=False ) :
         """
         get the nodegroups associated with this graph
 
         """
+        if cached and self.cached_nodegroups:
+            return self.cached_nodegroups
 
         nodegroups = set()
         for node in self.nodes.values():
@@ -1137,9 +1183,12 @@ class Graph(models.GraphModel):
                 nodegroups.add(node.nodegroup)
         for card in self.cards.values():
             nodegroups.add(card.nodegroup)
-        return list(nodegroups)
+        ng = list(nodegroups)
+        self.cached_nodegroups = ng
 
-    def get_or_create_nodegroup(self, nodegroupid):
+        return ng
+
+    def get_or_create_nodegroup(self, nodegroupid, cached=False):
         """
         get a nodegroup from an id by first looking through the nodes and cards associated with this graph.
         if not found then get the nodegroup instance from the database, otherwise return a new instance of a nodegroup
@@ -1150,7 +1199,7 @@ class Graph(models.GraphModel):
 
         """
 
-        for nodegroup in self.get_nodegroups():
+        for nodegroup in self.get_nodegroups(cached=cached):
             if str(nodegroup.nodegroupid) == str(nodegroupid):
                 return nodegroup
         try:

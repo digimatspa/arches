@@ -74,11 +74,16 @@ class JSONSerializer(object):
         # print inspect.isroutine(object)
         # print inspect.isabstract(object)
         # print type(object) == 'staticmethod'
-        if inspect.isroutine(object) or inspect.isbuiltin(object) or inspect.isclass(object):
-            raise UnableToSerializeMethodTypesError(type(object))
+        # if inspect.isroutine(object) or inspect.isbuiltin(object) or inspect.isclass(object):
+        #     raise UnableToSerializeMethodTypesError(type(object))
+        if (
+            object is None or
+            isinstance(object, (str, int, float, bool))
+        ):
+            return object
         elif isinstance(object, dict):
             return self.handle_dictionary(object)
-        elif isinstance(object, list) or isinstance(object, tuple) or isinstance(object, set):
+        elif isinstance(object, (list , tuple, set)):
             return self.handle_list(object)
         elif isinstance(object, Model):
             if hasattr(object, "serialize"):
@@ -89,34 +94,24 @@ class JSONSerializer(object):
             # return PythonSerializer().serialize([object],**self.options.copy())[0]['fields']
         elif isinstance(object, QuerySet):
             # return super(JSONSerializer,self).serialize(object, **self.options.copy())[0]
-            ret = []
-            for item in object:
-                ret.append(self.handle_object(item, fields, exclude))
-            return ret
+            # ret = []
+            # for item in object:
+            #     ret.append(self.handle_object(item, fields, exclude))
+            # return ret
+
+            return [self.handle_object(item, fields, exclude) for item in object]
+        elif isinstance(object, uuid.UUID):
+            return str(object)
         elif isinstance(object, bytes):
             return object.decode("utf-8")
         elif (
-            isinstance(object, int)
-            or isinstance(object, float)
-            or isinstance(object, int)
-            or isinstance(object, str)
-            or isinstance(object, bool)
-            or object is None
-        ):
-            return object
-        elif (
-            isinstance(object, datetime.datetime)
-            or isinstance(object, datetime.date)
-            or isinstance(object, datetime.time)
-            or isinstance(object, decimal.Decimal)
+            isinstance(object, (datetime.datetime, datetime.date, datetime.time, decimal.Decimal))
         ):
             return DjangoJSONEncoder().default(object)
         elif isinstance(object, GEOSGeometry):
             return getattr(object, self.geom_format)
         elif isinstance(object, File):
             return object.name
-        elif isinstance(object, uuid.UUID):
-            return str(object)
         elif hasattr(object, "__dict__"):
             # call an objects serialize method if it exists
             if hasattr(object, "serialize"):
@@ -140,11 +135,12 @@ class JSONSerializer(object):
 
     def handle_list(self, l):
         """Called to handle a list"""
-        arr = []
-        for item in l:
-            arr.append(self.handle_object(item))
-
-        return arr
+        # arr = []
+        # for item in l:
+        #     arr.append(self.handle_object(item))
+        #
+        # return arr
+        return list(map(self.handle_object, l))
 
     # a slighty modified version of django.forms.models.model_to_dict
     def handle_model(self, instance, fields=None, exclude=None):
@@ -165,20 +161,37 @@ class JSONSerializer(object):
         opts = instance._meta
         data = {}
         # print '='*40
-        properties = [k for k, v in instance.__class__.__dict__.items() if type(v) is property]
-        for property_name in properties:
-            if fields and property_name not in fields:
-                continue
-            if exclude and property_name in exclude:
-                continue
-            data[property_name] = self.handle_object(getattr(instance, property_name))
-        for f in chain(opts.concrete_fields, opts.private_fields, opts.many_to_many):
-            if not getattr(f, "editable", False):
-                continue
-            if fields and f.name not in fields:
-                continue
-            if exclude and f.name in exclude:
-                continue
+
+        for property_name, v in instance.__class__.__dict__.items():
+            if type(v) is property:
+                if fields and property_name not in fields:
+                    continue
+                if exclude and property_name in exclude:
+                    continue
+                data[property_name] = self.handle_object(getattr(instance, property_name))
+
+        # properties = [k for k, v in instance.__class__.__dict__.items() if type(v) is property]
+        # for property_name in properties:
+        #     if fields and property_name not in fields:
+        #         continue
+        #     if exclude and property_name in exclude:
+        #         continue
+        #     data[property_name] = self.handle_object(getattr(instance, property_name))
+        _fields = chain(opts.concrete_fields, opts.private_fields, opts.many_to_many)
+        if fields:
+            _fields = [f for f in _fields if f.name in fields]
+        if exclude:
+            _fields = [f for f in _fields if f.name not in exclude]
+
+
+        for f in _fields:
+        # for f in chain(opts.concrete_fields, opts.private_fields, opts.many_to_many):
+        #     if not getattr(f, "editable", False):
+        #         continue
+        #     if fields and f.name not in fields:
+        #         continue
+        #     if exclude and f.name in exclude:
+        #         continue
             if isinstance(f, ForeignKey):
                 # Emulate the naming convention used by django when accessing the
                 # related model's id field
@@ -246,12 +259,8 @@ class JSONDeserializer(object):
         elif isinstance(object, list) or isinstance(object, tuple):
             return self.handle_list(object)
         elif (
-            isinstance(object, int)
-            or isinstance(object, float)
-            or isinstance(object, int)
-            or isinstance(object, str)
-            or isinstance(object, bool)
-            or object is None
+             object is None or
+            isinstance(object, (int, float, str, bool))
         ):
             return object
         # elif isinstance(object, tuple):
