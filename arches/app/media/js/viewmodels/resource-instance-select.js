@@ -223,6 +223,7 @@ define([
         this.url = url;
         var resourceToAdd = ko.observable("");
         this.select2Config = {
+            language: "it",
             value: self.renderContext === 'search' ? self.value : resourceToAdd,
             clickBubble: true,
             multiple: !self.displayOntologyTable ? params.multiple : false,
@@ -357,7 +358,7 @@ define([
                 if (item._source) {
                     return item._source.displayname;
                 } else {
-                    return '<b> Create a new ' + item.name + ' . . . </b>';
+                    return '<b> Crea nuovo ' + item.name + ' . . . </b>';
                 }
             },
             formatSelection: function(item) {

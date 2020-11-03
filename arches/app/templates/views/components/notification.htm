@@ -5,12 +5,19 @@
 
     <div>
         <div class='entry'><i data-bind=""></i>
+            <div class='entry-label'>{% trans 'Notifica ' %}</div>
             <span class='time-label' data-bind="text: displaytime" ></span>
         </div>
         
         <div class="notification-message">
-            <span data-bind="text: message"></span> 
+            <!-- ko if: $data.context && $data.context.is_alert -->
+            <span class="badge badge-danger">Alert!</span>
+            <!-- /ko -->
+            <!-- ko if: $data.context && !$data.context.is_alert -->
+            <span class="badge badge-warning">Verifica</span>
+            <!-- /ko -->
 
+            <span data-bind="text: message"></span> 
             <ul>
                 <!-- ko foreach: loadedResources -->
                 <li>
@@ -24,6 +31,13 @@
         <div class='entry'>
             <button data-bind="click: getExportFile" class='btn btn-notifs-download btn-labeled btn-sm fa fa-download'>{% trans 'Download File' %}</button>
             <div style="padding-left: 10px;" data-bind="text: info"></div>
+        </div>
+        <!-- /ko -->
+
+        <!-- ko if: $data.context && $data.context.view -->
+        <div class='entry'>
+            <a data-bind="attr: { href: '/report/' + $data.context.view }">{% trans 'View Details' %}</a>
+            <div style="padding-left: 10px;" data-bind="text: $data.context.view_info"></div>
         </div>
         <!-- /ko -->
     </div>

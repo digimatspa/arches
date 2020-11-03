@@ -20,6 +20,7 @@ define([
         this.loadedResources = params.loaded_resources;
         this.link = params.link;
         this.message = params.message;
+        this.context = params.context;
 
         this.dismiss = function(parent) {
             $.ajax({

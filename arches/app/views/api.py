@@ -467,13 +467,14 @@ class MVT(APIBase):
 class MVTS(APIBase):
     EARTHCIRCUM = 40075016.6856
     PIXELSPERTILE = 256
+    se = SearchEngineFactory().create()
 
     def get(self, request, zoom, x, y):
         nodeid = 'e81113f2-69f0-11ea-be74-005056868262'
         if hasattr(request.user, "userprofile") is not True:
             models.UserProfile.objects.create(user=request.user)
         viewable_nodegroups = request.user.userprofile.viewable_nodegroups
-        resource_ids = get_restricted_instances(request.user)
+        resource_ids = get_restricted_instances(request.user, self.se)
         if len(resource_ids) == 0:
             resource_ids.append("10000000-0000-0000-0000-000000000001")  # This must have a uuid that will never be a resource id.
         resource_ids = tuple(resource_ids)
