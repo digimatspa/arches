@@ -167,13 +167,17 @@ define(['arches',
                                 };
 
                                 if (res.related.length > 0){
+                                    var found = false;
                                     for ( var item in res.related){
-                                        if (res.related[item].resourceid !== resource.instance_id) {
-                                            res.related.push(new_relationship);
+                                        if (res.related[item].resourceid === resource.instance_id) {
+                                            found = true;
                                         }
                                     }
+                                    if (!found){
+                                            res.related.push(new_relationship);
+                                    }
                                 }
-                            else {
+                                else {
                                     res.related.push(new_relationship);
                                 }
                             });
@@ -188,13 +192,17 @@ define(['arches',
                                     'thumbnail_url': null
                                 };
                                 if (res.related.length > 0){
+                                    var found = false;
                                     for ( var item in res.related){
-                                        if (res.related[item].resourceid !== resource.instance_id) {
-                                            res.related.push(new_relationship);
+                                        if (res.related[item].resourceid === resource.instance_id) {
+                                            found = true;
                                         }
                                     }
+                                    if (!found){
+                                            res.related.push(new_relationship);
+                                    }
                                 }
-                            else {
+                                else {
                                     res.related.push(new_relationship);
                                 }
                             });
