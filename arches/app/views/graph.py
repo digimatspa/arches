@@ -571,6 +571,8 @@ class PermissionDataView(View):
 
             content_type = ContentType.objects.get_for_model(models.NodeGroup)
             nodegroup_permissions = Permission.objects.filter(content_type=content_type)
+            for ng_perm in nodegroup_permissions:
+                ng_perm.name = _(ng_perm.name)
             ret = {"identities": identities, "permissions": nodegroup_permissions}
             return JSONResponse(ret)
 
@@ -584,7 +586,7 @@ class PermissionDataView(View):
             for nodegroup_id in nodegroup_ids:
                 nodegroup = models.NodeGroup.objects.get(pk=nodegroup_id)
                 perms = [
-                    {"codename": codename, "name": self.get_perm_name(codename).name} for codename in get_group_perms(identity, nodegroup)
+                    {"codename": codename, "name": _(self.get_perm_name(codename).name)} for codename in get_group_perms(identity, nodegroup)
                 ]
                 ret.append({"perms": perms, "nodegroup_id": nodegroup_id})
         else:
@@ -592,13 +594,13 @@ class PermissionDataView(View):
             for nodegroup_id in nodegroup_ids:
                 nodegroup = models.NodeGroup.objects.get(pk=nodegroup_id)
                 perms = [
-                    {"codename": codename, "name": self.get_perm_name(codename).name} for codename in get_user_perms(identity, nodegroup)
+                    {"codename": codename, "name": _(self.get_perm_name(codename).name)} for codename in get_user_perms(identity, nodegroup)
                 ]
 
                 # only get the group perms ("defaults") if no user defined object settings have been saved
                 if len(perms) == 0:
                     perms = [
-                        {"codename": codename, "name": self.get_perm_name(codename).name}
+                        {"codename": codename, "name": _(self.get_perm_name(codename).name)}
                         for codename in set(get_group_perms(identity, nodegroup))
                     ]
                 ret.append({"perms": perms, "nodegroup_id": nodegroup_id})

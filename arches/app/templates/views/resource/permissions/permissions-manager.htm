@@ -78,7 +78,7 @@
                                             'active': $data.selected
                                         }, click: $data.selected.bind($data, !$data.selected())">
                                         <input type="checkbox" data-bind="checked: $data.selected">
-                                        <i data-bind="css: $data.icon"></i> <span data-bind="text: $data.name.replace(' resource', '')"></span>
+                                        <i data-bind="css: $data.icon"></i> <span data-bind="text: $data.name.replace(' resource', '').replace('Read', 'Lettura').replace('Update','Modifica').replace('Delete','Cancella').replace('No Access', 'Nessun accesso')"></span>
                                     </label>
                                     </div>
                                     <!--/ko-->
