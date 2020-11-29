@@ -17,6 +17,7 @@
 
     var CKEDITOR_BASEPATH = '{{ STATIC_URL }}packages/ckeditor/';
     require.config({
+        waitSeconds : 15
         baseUrl: '{{ STATIC_URL }}js',
         urlArgs: '_dc={{ app_settings.VERSION }}',
         paths: {
