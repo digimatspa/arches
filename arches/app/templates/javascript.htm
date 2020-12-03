@@ -17,7 +17,7 @@
 
     var CKEDITOR_BASEPATH = '{{ STATIC_URL }}packages/ckeditor/';
     require.config({
-        waitSeconds : 15
+        waitSeconds : 15,
         baseUrl: '{{ STATIC_URL }}js',
         urlArgs: '_dc={{ app_settings.VERSION }}',
         paths: {
@@ -45,7 +45,7 @@
             'ckeditor-jquery': '{{ STATIC_URL }}packages/ckeditor/adapters/jquery',
             'knockout': '{{ STATIC_URL }}packages/knockout/build/output/knockout-latest',
             'knockout-mapping': '{{ STATIC_URL }}packages/knockout-mapping/dist/knockout.mapping.min',
-            'moment': '{{ STATIC_URL }}packages/moment/min/moment.min',
+            'moment': '{{ STATIC_URL }}packages/moment/min/moment-with-locales.min',
             'bootstrap-datetimepicker': '{{ STATIC_URL }}packages/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min',
             'blueimp-gallery': '{{ STATIC_URL }}packages/blueimp-gallery/js/blueimp-gallery.min',
             'blueimp-jquery': '{{ STATIC_URL }}packages/blueimp-gallery/js/jquery.blueimp-gallery.min',

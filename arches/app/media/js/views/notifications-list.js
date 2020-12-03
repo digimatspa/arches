@@ -2,11 +2,12 @@ define([
     'jquery',
     'arches',
     'views/list',
+    'moment',
     'bindings/datepicker',
     'bindings/chosen',
     'views/components/simple-switch',
     'views/components/notification',
-], function($, arches, ListView) {
+], function($, arches, ListView, moment) {
     var NotificationsList = ListView.extend({
         /**
         * A backbone view to manage a list of notification records
@@ -18,6 +19,7 @@ define([
         singleSelect: true,
 
         initialize: function(options) {
+            moment.locale('it');
             var self = this;
 
             this.items = options.items;
@@ -34,6 +36,9 @@ define([
                     url: arches.urls.get_notifications,
                     data: {"unread_only": true}
                 }).done(function(data) {
+                    data.notifications.forEach(function(elem){
+                        elem.displaytime = moment(elem.created).format('dddd, DD MMMM YYYY | hh:mm A');
+                    });
                     self.items(data.notifications);
                     self.helploading(false);
                 });

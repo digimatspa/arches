@@ -3,7 +3,7 @@ define(['knockout', 'knockout-mapping', 'underscore', 'moment', 'bindings/let', 
         var self = this;
         this.report = params.report || null;
         this.summary = params.summary || false;
-        this.reportDate = moment().format('MMMM D, YYYY');
+        this.reportDate = moment().format('D MMMM YYYY');
         this.configForm = params.configForm || false;
         this.configType = params.configType || 'header';
         this.editorContext = params.editorContext || false;
