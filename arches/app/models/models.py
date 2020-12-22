@@ -1322,6 +1322,8 @@ class AuthGroup(models.Model):
     validate_decay = models.BooleanField(default=False)
     validate_instability = models.BooleanField(default=False)
     validate_vegetation = models.BooleanField(default=False)
+    is_reviewer = models.BooleanField(default=False)
+    is_geodata_editor = models.BooleanField(default=False)
     receive_alerts = models.BooleanField(default=False)
 
 class AuthRole(models.Model):
@@ -1335,7 +1337,7 @@ class AuthRole(models.Model):
     WRITE_ = 1
     DELETE_ = 2
     NO_ACCESS_ = 3
-    
+
     PERMISSIONS_ =  (
         (0, "Read"),
         (1, "Create/Update"),
@@ -1343,7 +1345,7 @@ class AuthRole(models.Model):
         (3, "No Access")
     )
 
-    auth_role_id = models.AutoField(primary_key=True) 
+    auth_role_id = models.AutoField(primary_key=True)
     permission = models.PositiveIntegerField(
         choices=PERMISSIONS_,
         default=NO_ACCESS_
