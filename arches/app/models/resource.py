@@ -286,8 +286,7 @@ class Resource(models.ResourceInstance):
                         # Need to adjust if multiple areas proposed
 
                         area_nodes = self.get_node_values(area_field_name, False, provisional, False)
-                        if len(area_nodes)>0:
-                            area_id = area_nodes[0]
+                        for area_id in area_nodes:
                             area_heritages.append([None, area_id])
             else:
                 heritageId = str(self.resourceinstanceid)
