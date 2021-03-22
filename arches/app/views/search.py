@@ -384,7 +384,8 @@ def append_role_permission_filter_dsl(request, search_results_object):
 
         # Restrict access to resources of the following groups: ditta / cantiere esterno
         if request.user.groups.filter(Q(name=settings.DITTA_GROUP) | Q(name=settings.CANTIERE_ESTERNO_GROUP)).exists():
-            instances = get_restricted_instances(request.user,None,False)
+            se = SearchEngineFactory().create()
+            instances = get_restricted_instances(request.user,se,False)
             for instance in instances:
                 sub = { "bool": {
                     "must":
