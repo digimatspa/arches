@@ -42,7 +42,12 @@ define([
            let qrparams = (new URL(document.location)).searchParams;
            let qrvalue = qrparams.get(params.node.nodeid);
            if(qrvalue) {
-               params.value = ko.observable(qrvalue.replace("#",""));
+               //params.value = ko.observable(qrvalue.replace("#",""));
+                params.value = ko.observable([{
+                    "resourceId": ko.observable(qrvalue.replace("#","")),
+                    "resourceName": ko.observable(''),
+                    "ontologyClass": ko.observable(''),
+                }]);  
                params.tile.data[params.node.nodeid] = params.value;
            }
         }
