@@ -47,6 +47,9 @@ define([
                     "resourceId": ko.observable(qrvalue.replace("#","")),
                     "resourceName": ko.observable(''),
                     "ontologyClass": ko.observable(''),
+                    "ontologyProperty": ko.observable(''),
+                    "inverseOntologyProperty": ko.observable(''),
+                    "resourceXresourceId": ""
                 }]);  
                params.tile.data[params.node.nodeid] = params.value;
            }
