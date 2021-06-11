@@ -1157,6 +1157,9 @@ class UserXNotificationType(models.Model):
 def send_email_on_save(sender, instance, **kwargs):
     """Checks if a notification type needs to send an email, does so if email server exists
     """
+    from celery.utils.log import get_task_logger
+    logger = get_task_logger('celery_task')
+    success = False
     if instance.notif.notiftype is not None and instance.isread is False:
         if UserXNotificationType.objects.filter(user=instance.recipient, notiftype=instance.notif.notiftype, emailnotify=False).exists():
             return False
@@ -1164,6 +1167,7 @@ def send_email_on_save(sender, instance, **kwargs):
         try:
             if instance.notif.notiftype.emailnotify:
                 context = instance.notif.context.copy()
+                logger.info(f"CONTEXT IN PSOST_SAVE: {id(context)}")
                 text_content = render_to_string(instance.notif.notiftype.emailtemplate, context)
                 html_template = get_template(instance.notif.notiftype.emailtemplate)
                 html_content = html_template.render(context)
@@ -1176,14 +1180,19 @@ def send_email_on_save(sender, instance, **kwargs):
                 # subject, from_email, to = instance.notif.notiftype.name, "from@example.com", email_to
                 msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
                 msg.attach_alternative(html_content, "text/html")
-                msg.send()
+                msg_count_sent = msg.send()
                 if instance.notif.notiftype.webnotify is not True:
+                    if msg_count_sent == 1:
+                        logger.info(f"############ SENT: {msg_count_sent}")
+                        context["email_success"] = True
+                        notif_ = Notification.objects.get(id=instance.notif.id)
+                        notif_.context = context
+                        notif_.save()
                     instance.isread = True
                     instance.save()
         except Exception as err:
             logger = logging.getLogger(__name__)
             logger.warn(f"Email Server not correctly set up. See settings to configure: {err}")
-
     return False
 
 
