@@ -387,7 +387,7 @@
             <!-- ko if: card.showSummary() === true -->
             {% block card_summary %}
             {% include 'views/components/cards/default-card-report.htm' %}
-            <button class="btn btn-shim btn-labeled btn-lg fa fa-plus btn-primary" data-bind="text: '{% trans "New" %}', click: function(){card.showForm(true)}"></button>
+            <button class="btn btn-shim btn-labeled btn-lg fa fa-plus btn-primary" data-bind="text: '{% trans "New" %}', click: function(){card.showForm(true); if(card.widgets().length ==0) { self.saveTile();} }"></button>
             {% endblock card_summary %}
             <!-- /ko -->
 
