@@ -299,7 +299,8 @@ class Resource(models.ResourceInstance):
                 if len(concept.subconcepts) == 0 and len(concept.parentconcepts) > 0:
                     concept_areaId = concept.parentconcepts[0].id
                     area = models.Value.objects.filter(concept__conceptid=concept_areaId).exclude(value__contains='http://').exclude(value__contains='https://')[0]
-                    area_heritages[area_heritages_index][1] = str(area.valueid)
+                    if area.value != settings.AREA_CONCEPT_NAME:
+                        area_heritages[area_heritages_index][1] = str(area.valueid)
 
         except Exception as e:
             logger.exception(e)

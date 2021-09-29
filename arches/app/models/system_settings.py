@@ -57,6 +57,7 @@ class SystemSettings(LazySettings):
     HERITAGE_FIELD_NAME = "Bene archeologico"
     AREA_FIELD_NAME = "Area archeologica"
     AREA_CONCEPT_ID = "2e47db53-4fd4-4c4e-beaa-df1686989932"
+    AREA_CONCEPT_NAME = "Area Archeologica"
 
     #cantiere / calendar
     TIMESCHEDULE_NODEID = '9a2345fe-e62b-11ea-aee0-08002776b909'
