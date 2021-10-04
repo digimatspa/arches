@@ -44,6 +44,12 @@ define([
         }
     });
 
+    $(document).ready(function () {
+        if($(window).width() < 550){
+            togglePanel();
+        }
+    });
+
     var provisionalTileViewModel = new ProvisionalTileViewModel({tile: selectedTile, reviewer: data.user_is_reviewer});
 
     var flattenTree = function(parents, flatList) {

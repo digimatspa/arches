@@ -39,8 +39,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
         var currentSize = $('.left-panel').width();
         if(currentSize > 0) {
             $('.left-panel').width(0)
+            $('#toggleButton').text("Mostra albero")
+            $('#toggleButton').removeClass("fa-arrow-right");
+            $('#toggleButton').addClass("fa-arrow-left");
         } else {
             $('.left-panel').width("calc(100% - 15px)")    
+            $('#toggleButton').text("Mostra dati")
+            $('#toggleButton').removeClass("fa-arrow-left");
+            $('#toggleButton').addClass("fa-arrow-right");
         } 
       }
 </script>
@@ -63,7 +69,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 </style>
 
 <div class="content-panel">
-    <button id="toggleButton" class="btn btn btn-primary btn-labeled fa fa-arrow-left pull-left toggle-button-a" type="button" onclick="togglePanel()">Pannello</button>
+    <button id="toggleButton" class="btn btn btn-primary btn-labeled fa fa-arrow-left pull-left toggle-button-a" type="button" onclick="togglePanel()">Mostra albero</button>
     <div class="panel-container">
         <div class="left-panel graph-designer" data-bind="resizableSidepanel:true">
             <div class="left-panel-inner-container">
