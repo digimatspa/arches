@@ -27,7 +27,11 @@ define([
         this.card.showIds = this.showIds;
         this.tile = params.tile;
         //MOD START
-        this.reportExpanded = ko.observable(false);
+        var expand = true;
+        if (params.hasOwnProperty("forceExpanded")) {
+            expand = params.forceExpanded
+        }
+        this.reportExpanded = ko.observable(expand);
         //MOD END
         if (this.preview) {
             if (!this.card.newTile) {
