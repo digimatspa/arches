@@ -41,41 +41,25 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
         </div>
     </footer>
 </div>
-<script>
-    {% autoescape off %}
-
-    setTimeout(
-        function() {
-            let first_section = $('div.rp-report-section:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > i:nth-child(2)');
-            if(first_section && first_section.length>0) {
-                first_section[0].click();
-            }
-        },
-        10000 // a generous timeout here to allow maps/images to load
-    );
-    {% endautoescape %}
-</script>
 {% endblock main_content %}
 
 {% block pre_require_js %}
 {{ block.super }}
-
-<script>
-    {% autoescape off %}
-    define('resource-report-data', [], function () {
-        return {
-            templates: {{templates_json}},
-            datatypes: {{ datatypes_json }},
-            cards: {{cards}},
-            tiles: {{tiles}},
-            graph: {{graph_json}},
-            related_resources: {{related_resources}},
-            displayname: "{{displayname | escapejs}}",
-            cardComponents: {{card_components_json}},
-            resourceid: '{{resourceid}}',
-            cardwidgets: {{cardwidgets}},
-            hideEmptyNodes: JSON.parse('{{hide_empty_nodes}}'.toLowerCase())
-        };
-    });
+<script>{% autoescape off %}
+define('resource-report-data', [], function () {
+    return {
+        templates: {{templates_json}},
+        datatypes: {{ datatypes_json }},
+        cards: {{cards}},
+        tiles: {{tiles}},
+        graph: {{graph_json}},
+        related_resources: {{related_resources}},
+        displayname: "{{displayname | escapejs}}",
+        cardComponents: {{card_components_json}},
+        resourceid: '{{resourceid}}',
+        cardwidgets: {{cardwidgets}},
+        hideEmptyNodes: JSON.parse('{{hide_empty_nodes}}'.toLowerCase())
+    };
+});
 {% endautoescape %}</script>
 {% endblock pre_require_js %}
