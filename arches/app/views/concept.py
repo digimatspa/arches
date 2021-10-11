@@ -386,6 +386,12 @@ def paged_dropdown(request):
         dict(list(zip(["id", "text", "conceptid", "language", "type"], d["valueto"].values())), depth=d["depth"], collector=d["collector"])
         for d in data
     ]
+
+    if conceptid == settings.AREA_CONCEPT_ID and not request.user.is_superuser:
+        from arches.app.utils.permission_backend import get_role_permissions_for_user
+        permitted_areas, _ = get_role_permissions_for_user(request.user)
+        permitted_areas = [a for a, _, _ in permitted_areas]
+        data = [d for d in data if d["id"] in permitted_areas]
     return JSONResponse({"results": data, "more": offset + limit < total_count})
 
 
