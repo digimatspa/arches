@@ -268,26 +268,27 @@ class Resource(models.ResourceInstance):
                         except InvalidNodeNameException as e:
                             logger.debug("not found nodes with name {} into resource with id: {}".format(node_name, self.displayname))
                 else:
+                    heritage_found = False
                     if len(heritageIds_res) > 0:
                         for heritage in heritageIds_res:
-                            area_heritage = []
-                            heritage_id = heritage['resourceId']
-                            area_heritage.append(heritage_id)
-                            heritage_resource = Resource.objects.get(pk=heritage_id)
-                            area_id = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
-                            area_heritage.append(area_id)
-                            area_heritages.append(area_heritage)
+                            if heritage is not None:
+                                area_heritage = []
+                                heritage_id = heritage['resourceId']
+                                area_heritage.append(heritage_id)
+                                heritage_resource = Resource.objects.get(pk=heritage_id)
+                                area_id = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
+                                area_heritage.append(area_id)
+                                area_heritages.append(area_heritage)
+                                heritage_found = True
 
-                        # heritageId = heritageId_res[0]['resourceId']
-                        # heritage_resource = Resource.objects.get(pk=heritageId)
-                        # areaId = heritage_resource.get_node_values(area_field_name, False, provisional)[0]
-                    else:
+                    if not heritage_found:
                         # try to retrieve area (if the heritage instance is not defined)
                         # Need to adjust if multiple areas proposed
 
                         area_nodes = self.get_node_values(area_field_name, False, provisional, False)
                         for area_id in area_nodes:
-                            area_heritages.append([None, area_id])
+                            if area_id is not None:
+                                area_heritages.append([None, area_id])
             else:
                 heritageId = str(self.resourceinstanceid)
                 areaId = self.get_node_values(area_field_name, False, provisional)[0]
