@@ -600,7 +600,7 @@ class Resource(models.ResourceInstance):
 
         return JSONSerializer().serializeToPython(ret)
 
-    def get_node_values(self, node_name, parse=True, provisional=False, raise_exc=True):
+    def get_node_values(self, node_name, parse=True, provisional=False, raise_exc=True, tile_id=None):
         """
         Take a node_name (string) as an argument and return a list of values.
         If an invalid node_name is used, or if multiple nodes with the same
@@ -624,7 +624,10 @@ class Resource(models.ResourceInstance):
                 return values
 
 
-        tiles = self.tilemodel_set.filter(nodegroup_id=nodes[0].nodegroup_id)
+        if tile_id is None:
+            tiles = self.tilemodel_set.filter(nodegroup_id=nodes[0].nodegroup_id)
+        else:
+            tiles = self.tilemodel_set.filter(tileid=tile_id)
         
         for tile in tiles:
             for node_id, value in tile.data.items():
