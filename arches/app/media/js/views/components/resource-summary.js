@@ -20,6 +20,7 @@ define([
         this.graphId = params.graphId || ko.observable();
         this.dataSource = params.source || ko.observable();
         this.resourceId = params.resourceId;
+        this.summary = params.hasOwnProperty('summary') ? params.summary : ko.observable(true);
         this.resourceId.subscribe(function(resId) {
             this.setupReport(resId, this.graphId(), this.dataSource());
         }, this);
