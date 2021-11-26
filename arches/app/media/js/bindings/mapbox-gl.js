@@ -31,6 +31,8 @@ define([
                 ];
             }
 
+            mapInitOptions['preserveDrawingBuffer'] = true;
+
             var map = new mapboxgl.Map(
                 _.defaults(mapInitOptions, defaults)
             );

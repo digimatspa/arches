@@ -122,6 +122,32 @@ define([
                     }
                     
                     self.timeout = setTimeout(self.viewModel.getNotifications, self.INTERVAL);
+                },
+                printPage: function() {
+                    var canvas = $('.mapboxgl-canvas');
+                    var snapshotImageElement = $('#snapshotImageElement');
+                    if(canvas.length > 0 && snapshotImageElement.length>0){
+                        canvas  = canvas.get(0);
+                        snapshotImageElement = snapshotImageElement.get(0);
+
+                        var img = canvas.toDataURL('image/png')
+                        snapshotImageElement.src = img;
+                        
+                        setTimeout(function(){ 
+                            var wrapper = $('.workbench-card-wrapper');
+                            var wrapperImg  = $('#snapshotDiv');
+                            wrapper.hide();
+                            wrapperImg.show();
+
+                            
+                            window.print();
+                            wrapperImg.hide();
+                            wrapper.show();
+                         }, 500);
+
+                    } else {
+                        window.print();
+                    }
                 }
             });
             self.viewModel.notifsList.items.subscribe(function(list) {

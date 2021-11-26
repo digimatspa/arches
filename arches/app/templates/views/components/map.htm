@@ -1,5 +1,21 @@
 {% load i18n %}
 
+
+<div id='snapshotDiv' style="
+    flex: 1;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #fafafa;
+    border-top: 1px solid #ddd;
+    display: none;" >
+    <img id='snapshotImageElement' style="
+        width: 100%;
+        height: auto;
+       " />
+</div>
+
 <div class="workbench-card-wrapper">
     <div class="workbench-card-sidebar">
         {% block tabs %}
