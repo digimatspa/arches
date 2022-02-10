@@ -66,12 +66,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
             width: calc(100% - 15px);
         }
     }
+
+    .limit-width{
+        max-width: 30%;
+    }
 </style>
 
 <div class="content-panel">
     <button id="toggleButton" class="btn btn btn-primary btn-labeled fa fa-arrow-left pull-left toggle-button-a" type="button" onclick="togglePanel()">Mostra albero</button>
     <div class="panel-container">
-        <div class="left-panel graph-designer" data-bind="resizableSidepanel:true">
+        <div class="left-panel graph-designer limit-width" data-bind="resizableSidepanel:true">
             <div class="left-panel-inner-container">
                 <div class="jstree jstree-default" data-bind="visible: true" style="display: none;">
                     <div class="header">

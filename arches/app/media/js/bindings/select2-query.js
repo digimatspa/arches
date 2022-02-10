@@ -37,10 +37,10 @@ define([
 
             if (value) {
                 $(el).select2("val", value());
-                value.subscribe(function(newVal) {
+                /*value.subscribe(function(newVal) {
                     select2Config.value = newVal;
                     $(el).select2("val", newVal);
-                }, this);
+                }, this);*/
                 $(el).on("change", function(val) {
                     if (val.val === "") {
                         val.val = null;
