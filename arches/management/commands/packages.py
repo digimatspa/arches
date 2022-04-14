@@ -957,7 +957,7 @@ class Command(BaseCommand):
         ret = skos.save_concepts_from_skos(rdf, overwrite, stage)
 
     def import_business_data(
-        self, data_source, config_file=None, overwrite=None, bulk_load=False, create_concepts=False, use_multiprocessing=False, force=False
+        self, data_source, config_file=None, overwrite=None, bulk_load=False, create_concepts=False, use_multiprocessing=False, force=False, user=None
     ):
         """
         Imports business data from all formats. A config file (mapping file) is required for .csv format.
@@ -1017,6 +1017,7 @@ will be very jumbled."""
                         create_concepts=create_concepts,
                         create_collections=create_collections,
                         use_multiprocessing=use_multiprocessing,
+                        user=user
                     )
                 else:
                     utils.print_message("No file found at indicated location: {0}".format(source))

@@ -173,6 +173,7 @@ class BusinessDataImporter(object):
         create_concepts=False,
         create_collections=False,
         use_multiprocessing=False,
+        user=None
     ):
         reader = None
         start = time()
@@ -187,7 +188,7 @@ class BusinessDataImporter(object):
                 mapping = self.mapping
             if file_format == "json":
                 reader = ArchesFileReader()
-                reader.import_business_data(business_data, mapping)
+                reader.import_business_data(business_data, mapping, user=user)
             elif file_format == "jsonl":
                 with open(self.file[0], "rU") as openf:
                     lines = openf.readlines()

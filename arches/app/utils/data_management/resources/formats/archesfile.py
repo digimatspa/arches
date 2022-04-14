@@ -129,7 +129,7 @@ class ArchesFileReader(Reader):
             tile["data"] = new_data
         return tiles
 
-    def import_business_data_without_mapping(self, business_data, reporter):
+    def import_business_data_without_mapping(self, business_data, reporter, user=None):
         errors = []
         for resource in business_data["resources"]:
             if resource["resourceinstance"] is not None:
@@ -141,6 +141,13 @@ class ArchesFileReader(Reader):
                             "legacyid": resource["resourceinstance"]["legacyid"],
                         },
                     )
+                    try:
+                        if user is not None:
+                            from arches.app.models.resource import Resource
+                            res = Resource.objects.get(pk=resourceinstance.resourceinstanceid)
+                            res.save(user=user)
+                    except:
+                        pass
 
                     if len(ResourceInstance.objects.filter(resourceinstanceid=resource["resourceinstance"]["resourceinstanceid"])) == 1:
                         reporter.update_resources_saved()
@@ -197,11 +204,11 @@ class ArchesFileReader(Reader):
             blank_tile = None
         return blank_tile
 
-    def import_business_data(self, business_data, mapping=None):
+    def import_business_data(self, business_data, mapping=None, user=None):
         reporter = ResourceImportReporter(business_data)
         try:
             if mapping is None or mapping == "":
-                self.import_business_data_without_mapping(business_data, reporter)
+                self.import_business_data_without_mapping(business_data, reporter, user=user)
             else:
                 blanktilecache = {}
                 target_nodegroup_cardinalities = {}
