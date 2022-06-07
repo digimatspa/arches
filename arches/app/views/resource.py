@@ -51,6 +51,7 @@ from arches.app.utils.permission_backend import (
     user_can_delete_resource,
     user_can_edit_resource,
     user_can_read_resource,
+    user_can_edit_graph,
 )
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.search.search_engine_factory import SearchEngineFactory
@@ -130,6 +131,10 @@ class ResourceEditorView(MapBaseManagerView):
         main_script="views/resource/editor",
         nav_menu=True,
     ):
+        if request is not None and request.user is not None and graphid is not None:
+            if not user_can_edit_graph(request.user, graphid):
+                raise PermissionDenied
+
         if self.action == "copy":
             return self.copy(request, resourceid)
 

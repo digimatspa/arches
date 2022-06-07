@@ -53,11 +53,13 @@ from arches.app.utils.permission_backend import (
     get_restricted_instances,
     check_resource_instance_permissions,
     get_nodegroups_by_perm,
+    user_can_edit_graph,
 )
 from arches.app.utils.geo_utils import GeoUtils
 from arches.app.search.components.base import SearchFilterFactory
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.search.search_engine_factory import SearchEngineFactory
+from django.core.exceptions import PermissionDenied
 
 
 from arches.celery import app
@@ -935,6 +937,11 @@ class Card(APIBase):
             resourceid = None
             resource_instance = None
             pass
+
+        if request is not None and request.user is not None and graph is not None:
+            if not user_can_edit_graph(request.user, graph.graphid):
+                raise PermissionDenied
+
         nodes = graph.node_set.all()
 
         nodegroups = []

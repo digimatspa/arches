@@ -9,6 +9,13 @@ define([
     var resourceLookup = {};
     var graphCache = {};
     require(['views/components/workflows/new-tile-step']);
+    var createableResources = [];
+
+    try{
+        createableResources = require('view-data').createableResources;
+    }catch(err) {
+        console.log(err);
+    }
     
     /**
     * A viewmodel used for generic alert messages
@@ -35,6 +42,7 @@ define([
     var ResourceInstanceSelectViewModel = function(params) {
         var self = this;
         this.graphLookup = graphCache;
+        this.createableResources = createableResources;
         params.configKeys = ['placeholder'];
 
         //MOD START
@@ -341,16 +349,18 @@ define([
                     _this = this;
                     if (!data['paging-filter'].paginator.has_next && self.renderContext !== 'search') {
                         self.resourceTypesToDisplayInDropDown.forEach(function(graphid) {
-                            //MOD START
-                            //var graph = self.graphLookup[graphid];
-                            var val = {
-                                //name: graph.name,
-                                name : _this.graphNameLookup(graphid),
-                            //MOD END
-                                _id: graphid,
-                                isGraph: true
-                            };
-                            data.results.hits.hits.push(val);
+                            if(self.createableResources.filter(e => e.graphid==graphid).length != 0){
+                                //MOD START
+                                //var graph = self.graphLookup[graphid];
+                                var val = {
+                                    //name: graph.name,
+                                    name : _this.graphNameLookup(graphid),
+                                //MOD END
+                                    _id: graphid,
+                                    isGraph: true
+                                };
+                                data.results.hits.hits.push(val);
+                            }
                         });
                     }
                     return {
