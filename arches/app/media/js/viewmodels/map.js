@@ -351,6 +351,9 @@ define([
                         }
                     });
                 }
+
+                //workaround to solve a bug where overlays are not activated
+                self.activeBasemap(self.activeBasemap());
             });
         };
     };
