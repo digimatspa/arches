@@ -342,7 +342,7 @@ class Graph(models.GraphModel):
         if already_saved is True:
             saved_node_datatype = models.Node.objects.get(pk=node.nodeid).datatype
 
-        if self.is_editable() is True:
+        if self.is_editable() is True or settings.OVERRIDE_RESOURCE_MODEL_LOCK:
             try:
                 node.save()
             except IntegrityError as e:
@@ -901,7 +901,7 @@ class Graph(models.GraphModel):
 
             tree = self.get_tree(root=node)
             tile_count = models.TileModel.objects.filter(nodegroup=node.nodegroup).count()
-            if self.is_editable() is False and tile_count > 0:
+            if self.is_editable() is False and settings.OVERRIDE_RESOURCE_MODEL_LOCK is False and tile_count > 0:
                 raise GraphValidationError(
                     _(
                         f"Your resource model: {self.name}, already has instances saved. \
@@ -1341,7 +1341,7 @@ class Graph(models.GraphModel):
             return res
 
         if self.isresource is True:
-            if self.is_editable() is False:
+            if self.is_editable() is False and settings.OVERRIDE_RESOURCE_MODEL_LOCK is False:
                 unpermitted_edits = []
                 db_nodes = models.Node.objects.filter(graph=self)
                 for db_node in db_nodes:
