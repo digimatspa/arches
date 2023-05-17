@@ -62,6 +62,10 @@ define([
         var filter = params.filter || ko.observable();
         var loading = params.loading || ko.observable();
 
+        //Fix for model update. Add empty data to tile if not found in tile
+        const result = params.cardwidgets.flatMap((el) => (el.node_id));
+        result.forEach((el) => (params.tile.data.hasOwnProperty(el) ? null : params.tile.data[el] = null))
+
         _.extend(this, params.tile);
 
         this._tileData = ko.observable(
