@@ -245,17 +245,21 @@ class Tile(models.TileModel):
 
     def check_for_missing_nodes(self, request):
         missing_nodes = []
+        data = request.POST.get('data')
+        data_dict = json.loads(data)
+        nodegroup_id = data_dict.get('nodegroup_id')
         for nodeid, value in self.data.items():
             try:
                 node = models.Node.objects.get(nodeid=nodeid)
-                datatype = self.datatype_factory.get_instance(node.datatype)
-                datatype.clean(self, nodeid)
-                if request is not None:
-                    if self.data[nodeid] is None and node.isrequired is True:
-                        if len(node.cardxnodexwidget_set.all()) > 0:
-                            missing_nodes.append(node.cardxnodexwidget_set.all()[0].label)
-                        else:
-                            missing_nodes.append(node.name)
+                if str(node.nodegroup.nodegroupid) == str(nodegroup_id):
+                    datatype = self.datatype_factory.get_instance(node.datatype)
+                    datatype.clean(self, nodeid)
+                    if request is not None:
+                        if self.data[nodeid] is None and node.isrequired is True:
+                            if len(node.cardxnodexwidget_set.all()) > 0:
+                                missing_nodes.append(node.cardxnodexwidget_set.all()[0].label)
+                            else:
+                                missing_nodes.append(node.name)
             except Exception as e:
                 warning = _(
                     f"Error checking for missing node. Nodeid: {nodeid} with value: {value}, not in nodes. \
@@ -266,6 +270,7 @@ class Tile(models.TileModel):
             message = _("This card requires values for the following: ")
             message += (", ").join(missing_nodes)
             raise TileValidationError(message)
+            
 
     def validate(self, errors=None):
         for nodeid, value in self.data.items():
