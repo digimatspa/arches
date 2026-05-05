@@ -57,8 +57,8 @@ class SystemSettings(LazySettings):
     CATEGORY_NAME = "Categoria"
     SEG_TYPE_NAME = "Tipo segnalazione"
     SEG_TYPE_ALERT = "Urgente"
-    HERITAGE_FIELD_NAME = "Bene archeologico"
-    AREA_FIELD_NAME = "Area archeologica"
+    HERITAGE_FIELD_NAME = "Bene architettonico"
+    AREA_FIELD_NAME = "Area del Parco della Murgia Materana"
     AREA_CONCEPT_ID = "2e47db53-4fd4-4c4e-beaa-df1686989932"
     AREA_CONCEPT_NAME = "Area Archeologica"
 
